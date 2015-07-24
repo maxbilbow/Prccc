@@ -2,27 +2,24 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace RMX {
-	public enum Testing {
-		Misc, GameCenter, Achievements, Exceptions, GameDataLists, Singletons, Patches, Database, EventCenter
-		
-	}
-
-	public class Settings : ASingleton<Settings> {
+namespace RMX.Procrastinate {
+	
+	public class Settings : Singletons.ASingleton<Settings>, ISettings {
 
 		public int MaxNumberOfClocks = 50; 
-		public TextAsset Database;
+		public TextAsset _database;
+
+		public TextAsset Database {
+			get {
+				return _database;
+			}
+		}
+	
 		public float FingerSize = 0.3f;
 		public ClockSpawner.SpawnMode ClockSpawnMode;// = ClockSpawner.SpawnMode.Inflate;
 		public bool willPauseOnLoad = false;
 		public bool newPersonalBest = false;
-		#if UNITY_ANDROID
-//		public bool beta = false;
-		public bool printToScreen = false;
-		#else
-//		public bool beta = true;
-		public bool printToScreen = true;
-		#endif
+
 //		public struct DebugSettings {
 //			public bool beta;
 //			public bool printToScreen;
@@ -31,6 +28,15 @@ namespace RMX {
 
 
 		public float updateScoresEvery = 1f;
+
+		public bool PrintToScreen {
+			get {
+				return _printToScreen;
+			} set {
+				_printToScreen = value;
+			}
+		}
+		public bool _printToScreen = true;
 		public bool DebugMisc;
 		public bool DebugGameCenter;
 		public bool DebugAchievements;
@@ -40,14 +46,17 @@ namespace RMX {
 		public bool DebugDatabase;
 		public bool DebugPatches;
 		public bool DebugEvents;
-
-
 		public bool ClearAchievementsOnLoad;
-
 
 
 	
 		public float maxDisplayTime = 5f;
+
+		public float MaxDisplayTime  {
+			get {
+				return maxDisplayTime;
+			}
+		}
 	
 		/// <summary>
 		/// The dev time wasted.
@@ -76,7 +85,7 @@ namespace RMX {
 				PlayerPrefs.DeleteAll();
 			}
 #endif
-			if (!Database) {
+			if (!_database) {
 				Debug.LogWarning("database asset not set");
 			}
 			if (Random.Range(1,10) > 5)
@@ -84,41 +93,41 @@ namespace RMX {
 		}
 
 
-		public bool IsDebugging(Testing feature) {
-			if (!GameController.IsInitialized) {
-				Debug.LogWarning ("GameController was not initialized before trying to test " + feature.ToString ());
-				return false;
-			} else {
-				switch (feature) {
-				case Testing.Misc:
-					return DebugMisc;
-				case Testing.GameCenter:
-					return DebugGameCenter;
-				case Testing.Achievements:
-					return DebugAchievements;
-				case Testing.Exceptions:
-					return DebugExceptions;
-				case Testing.Singletons:
-					return DebugSingletons;
-				case Testing.GameDataLists:
-					return DebugGameDataLists;
-				case Testing.Patches:
-					return DebugPatches;
-				case Testing.Database:
-					return DebugDatabase;
-				case Testing.EventCenter:
-					return DebugEvents;
-				default:
-					Debug.LogWarning (feature.ToString () + " has not been recorded in Settings.IsTesting(feature)");
-					return false;
-				}
-			}
-		}
+
 		void Update() {
 #if UNITY_EDITOR
 
 #endif
 
+		}
+
+		public bool IsDebugging(string feature) {
+			if (!GameController.IsInitialized) {
+				Debug.LogWarning ("GameController was not initialized before trying to test " + feature.ToString ());
+				return false;
+			} else {
+				if (feature == Testing.Misc)
+					return DebugMisc;
+				else if (feature == Testing.GameCenter)
+					return DebugGameCenter;
+				else if (feature == Testing.Achievements)
+					return DebugAchievements;
+				else if (feature == Testing.Exceptions)
+			         return DebugExceptions;
+		        else if (feature == Testing.Singletons)
+			         return DebugSingletons;
+	      	   else if (feature == Tests.GameDataLists)
+					return DebugGameDataLists;
+				else if (feature == Testing.Patches)
+					return DebugPatches;
+				else if (feature == Testing.Database)
+					return DebugDatabase;
+				else if (feature == Testing.EventCenter)
+					return DebugEvents;
+				else
+					Debug.LogWarning (feature.ToString () + " has not been recorded in Settings.IsTesting(feature)");
+				return false;
+			}
 		}
 //		const string tempName = "324329hrNhfeuwh9";
 //		public static T CreateSingleton<T>() where T : ASingleton<T>

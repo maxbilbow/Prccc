@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.SocialPlatforms;
 
-namespace RMX {
+namespace RMX.Procrastinate {
 
 	public enum UserData {
 		// Saved Game Data

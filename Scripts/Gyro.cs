@@ -2,7 +2,7 @@
 using System.Collections;
 
 namespace RMX {
-	public class Gyro : ASingleton<Gyro> {
+	public class Gyro : Singletons.ASingleton<Gyro> {
 
 	 	void LateUpdate () 
 		{

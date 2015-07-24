@@ -2,8 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace RMX {
-	public class SoundEffects : ASingleton<SoundEffects>, EventListener {
+namespace RMX.Procrastinate {
+	public class SoundEffects : RMX.Singletons.ASingleton<SoundEffects> {
 		public const string POP = "pop";
 
 		public enum Args
@@ -35,42 +35,24 @@ namespace RMX {
 			current.tracks [name.ToLower ()].Play (delay);
 		}
 
-		public override void OnEventDidStart(Event theEvent, object info) {
-			switch (theEvent) {
-			case Event.ClockIsAboutToBurst:
+		public override void OnEventDidStart(IEvent theEvent, object info) {
+			if (theEvent.IsType(Events.ClockIsAboutToBurst))
 				tracks ["poppy1"].Play ();
-				break;
-			case Event.PauseSession:
+			else if (theEvent.IsType(Events.PauseSession))
 				if (info == null || (Args) info != SoundEffects.Args.MusicKeepsPlaying)
 					tracks["music"].Pause();
-				break;
-			default:
-				return;
-			}
 		}
 
-		public override void OnEvent(Event theEvent, object info) {
-			switch (theEvent) {
-			case Event.SomethingBurst:
+		public override void OnEvent(IEvent theEvent, object info) {
+			if (theEvent.IsType(Events.SomethingBurst))
 				Play (POP);
-				break;
-			default:
-				return;
-			}
 		}
 
-		public override void OnEventDidEnd(Event theEvent, object info) {
-			switch (theEvent) {
-			case Event.ClockIsAboutToBurst:
+		public override void OnEventDidEnd(IEvent theEvent, object info) {
+			if (theEvent.IsType(Events.ClockIsAboutToBurst))
 				tracks ["poppy2"].PlayDelayed (1);
-				break;
-			case Event.ResumeSession:
+			else if (theEvent.IsType( Events.ResumeSession))
 				tracks["music"].UnPause();
-				break;
-			default:
-				return;
-			}
-
 		}
 
 

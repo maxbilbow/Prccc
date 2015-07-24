@@ -2,9 +2,9 @@ using System;
 using System.Collections;
 using UnityEngine;
 
-namespace RMX
+namespace RMX.Procrastinate
 {
-    public class DragRigidbody : ASingleton<DragRigidbody>
+	public class DragRigidbody : RMX.Singletons.ASingleton<DragRigidbody>
     {
 		private const float PI_OVER_180 = Mathf.PI/180;
 		const float k_Spring = 50.0f;
@@ -13,9 +13,11 @@ namespace RMX
 		const float k_AngularDrag = 5.0f;
 		const float k_Distance = 0.2f;
         const bool k_AttachToCenterOfMass = false;
+
+
 		float fingerWidth { 
 			get {
-				return settings.FingerSize;
+				return Settings.current.FingerSize;
 			}
 		}
 
@@ -173,15 +175,13 @@ namespace RMX
 			}
 		}
 
-		public override void OnEventDidEnd (Event theEvent, object args)
+		public override void OnEventDidEnd (IEvent theEvent, object args)
 		{
-			switch (theEvent) {
-			case Event.SpawnInflatableClock:
+			if (theEvent.IsType(Events.SpawnInflatableClock))
 				if (args is ClockBehaviour) {
 					AttachBody((args as ClockBehaviour).body, Input.GetTouch(Input.touchCount - 1),0);
 				}
-				break;
-			}
+				
 		}
     }
 }

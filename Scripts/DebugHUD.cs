@@ -3,8 +3,8 @@ using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace RMX {
-	public class DebugHUD : ASingleton<DebugHUD> {
+namespace RMX.Procrastinate {
+	public class DebugHUD : RMX.Singletons.ASingleton<DebugHUD> {
 
 		public GameObject showButton;
 		public GameObject hideButton;

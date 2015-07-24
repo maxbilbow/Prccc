@@ -11,8 +11,8 @@ using System.Runtime.InteropServices;
 
 
 
-namespace RMX {
-	public class GameCenter : ASingleton<GameCenter> , EventListener {
+namespace RMX.Procrastinate {
+	public class GameCenter : RMX.Singletons.ASingleton<GameCenter> {
 
 
 		void Start() {
@@ -20,8 +20,8 @@ namespace RMX {
 			Authenticate ();
 //			TimeBasedAchievementsShouldUpdate ();
 
-			settings.willPauseOnLoad = SavedData.Get(UserData.CurrentSession).Float > 0;
-			if (settings.willPauseOnLoad) {
+			Settings.current.willPauseOnLoad = SavedData.Get(UserData.CurrentSession).Float > 0;
+			if (Settings.current.willPauseOnLoad) {
 				PauseCanvas.current.Pause(true);
 			}
 		
@@ -38,50 +38,41 @@ namespace RMX {
 					ReportProgress (id.Key, true);
 		}
 
-		public override void OnEventDidStart(Event theEvent, object info) {
-			switch (theEvent) {
-			case Event.PauseSession:
+		public override void OnEventDidStart(IEvent theEvent, object info) {
+			if (theEvent.IsType(Events.PauseSession))
 				Authenticate ();
-				break;
-
-			}
 		}
 
-		public override void OnEventDidEnd(Event theEvent, object info) {
-			switch (theEvent) {
-			case Event.PauseSession:
+		public override void OnEventDidEnd(IEvent theEvent, object info) {
+			if (theEvent.IsType(Events.PauseSession)) {
 				UpdateGameCenterAchievements ();
 				ReportScore(SavedData.Get(UserData.CurrentProcrastination).Long, UserData.LongestProctrastination);
-				break;
 			}
 		}
 
-		public override void OnEvent(Event theEvent, object info) {
-			switch (theEvent) {
-			case Event.GC_AchievementGained:
+		public override void OnEvent(IEvent theEvent, object info) {
+			if (theEvent.IsType(Events.GC_AchievementGained))
 				if (info is UserData) {
 					var key = (UserData) info;
 					ReportProgress (key, true);
 					if (Bugger.WillLog (Testing.EventCenter, info.ToString ()))
 						Debug.Log (Bugger.Last);
-				}
-				break;
 			}
 		}
 
 		void Authenticate() {
 			var userInfo = Bugger.StartNewLog (Testing.GameCenter);
 			if (!UserAuthenticated) {
-				WillBeginEvent(Event.GC_UserAuthentication);
+				WillBeginEvent(Events.GC_UserAuthentication);
 				Social.localUser.Authenticate (success => {
 					if (success) {
-						DidFinishEvent (Event.GC_UserAuthentication, EventStatus.Success);
+						DidFinishEvent (Events.GC_UserAuthentication, EventStatus.Success);
 						userInfo.message += "Authentication successful";
 						userInfo.message += "Username: " + Social.localUser.userName + 
 							"\nUser ID: " + Social.localUser.id + 
 							"\nIsUnderage: " + Social.localUser.underage;
 					} else {
-						DidFinishEvent (Event.GC_UserAuthentication, EventStatus.Failure);
+						DidFinishEvent (Events.GC_UserAuthentication, EventStatus.Failure);
 						userInfo.message += "Authentication failed";
 					}
 				});
@@ -139,7 +130,7 @@ namespace RMX {
 			if (Time.fixedTime > _checkTime) {
 				foreach (UserData key in timeBasedAchievements)
 					HasMetTimeCriteria(key);
-				_checkTime = Time.fixedTime + settings.updateScoresEvery;
+				_checkTime = Time.fixedTime + Settings.current.updateScoresEvery;
 			}
 		}
 
@@ -172,7 +163,7 @@ namespace RMX {
 			}
 	
 			if (result) {// && result != SavedData.Get (key).Bool) { 
-				Notifications.EventDidOccur (Event.GC_AchievementGained, key);
+				Notifications.EventDidOccur (Events.GC_AchievementGained, key);
 				return true;
 			} else {
 				return false; 
@@ -221,7 +212,7 @@ namespace RMX {
 		*/
 		static bool UserAuthenticated {
 			get {
-				return Notifications.StatusOf(Event.GC_UserAuthentication) == EventStatus.Success;
+				return Notifications.StatusOf(Events.GC_UserAuthentication) == EventStatus.Success;
 			}
 		}
 		const double EVENT_BASED_ACHIEVEMENT = -1;

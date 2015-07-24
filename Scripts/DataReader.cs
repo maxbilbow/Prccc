@@ -3,18 +3,20 @@ using System.Collections;
 using System.Collections.Generic;
 using System;
 
-namespace RMX
+namespace RMX.Procrastinate
 {
 	public class Wychd : List<string> {}
-	public class DataReader : ASingleton<DataReader>
+	public class DataReader : RMX.Singletons.ASingleton<DataReader>
 	{
 		public const float variation = 0.2f;
 		public const int csv_time = 2;
 		public const int csv_text = 1;
 		public const int csv_approved = 3;
+
+
 		TextAsset database {
 			get {
-				return settings.Database;
+				return Singletons.Settings.Database;
 			}
 		}
 

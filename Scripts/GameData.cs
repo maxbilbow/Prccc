@@ -2,12 +2,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Xml;
-namespace RMX {
+namespace RMX.Procrastinate {
 
 
 
 
-	public class GameData : ASingleton<GameData>  {
+	public class GameData : RMX.Singletons.ASingleton<GameData> {
 		/// <summary>
 		/// Usually true after the game was turned off and on
 		/// </summary>
@@ -43,7 +43,17 @@ namespace RMX {
 
 
 
-
+//		Settings settings {
+//			get {
+//				return Settings.current;
+//			}
+//		}
+//		
+//		GameController gameController {
+//			get {
+//				return GameController.current as GameController;
+//			}
+//		}
 
 
 //		public bool GetSavedData()
@@ -70,7 +80,7 @@ namespace RMX {
 
 		public double PercentageOfDevTimeWasted {
 			get {
-				return GameData.current.totalTime / settings.TotalDevTimeWasted;
+				return GameData.current.totalTime / Settings.current.TotalDevTimeWasted;
 			}
 		}
 
@@ -108,7 +118,7 @@ namespace RMX {
 
 		public Wychd WhatYouCouldHaveDone(float time) {
 			Wychd result = DataReader.current.GetActivityList (time);
-			var log = Bugger.StartNewLog (Testing.GameDataLists);
+			var log = Bugger.StartNewLog (Tests.GameDataLists);
 			log.message += "List accessed with time: " + time + ", and " + result.Count + " sentences.";
 			if (result.Count > 0) {
 				log.message += "\n - Adding from database...";

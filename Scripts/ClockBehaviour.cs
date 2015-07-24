@@ -2,8 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace RMX {
-	public class ClockBehaviour : RMXObject {
+namespace RMX.Procrastinate {
+	public class ClockBehaviour : RMX.RMXObject {
 		// Use this for initialization
 		public Vector3 startingPoint;
 
@@ -23,13 +23,13 @@ namespace RMX {
 				inflationSpeed *= 0.975f;
 				transform.localScale *= 1 + inflationSpeed;
 				if (inflationSpeed < 0.0004) { 
-					DidCauseEvent(Event.SomethingBurst);
-					DidFinishEvent(Event.ClockIsAboutToBurst);
-					DidCauseEvent(Event.GC_AchievementGained,UserData.BigTime);
+					DidCauseEvent(Events.SomethingBurst);
+					DidFinishEvent(Events.ClockIsAboutToBurst);
+					DidCauseEvent(Events.GC_AchievementGained,UserData.BigTime);
 					Destroy (this.gameObject);
 					return true;
 				} else if (inflationSpeed < 0.005) {
-					WillBeginEvent(Event.ClockIsAboutToBurst);
+					WillBeginEvent(Events.ClockIsAboutToBurst);
 					var color = spriteRenderer.color;
 					spriteRenderer.color = new Color(color.r * 1.01f, color.g * 0.98f, color.b * 0.99f);
 				}

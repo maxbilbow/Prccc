@@ -5,8 +5,8 @@ using UnityEngine.EventSystems;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace RMX {
-	public class PauseCanvas : ASingleton<PauseCanvas> , EventListener {
+namespace RMX.Procrastinate {
+	public class PauseCanvas : Singletons.ASingleton<PauseCanvas>  {
 
 //		Canvas canvas;
 		Button infoButton;
@@ -31,6 +31,20 @@ namespace RMX {
 		public Color color = Color.white;
 		public Material material;
 		public bool preserveAspect = false;
+
+//		Settings settings {
+//			get {
+//				return Settings.current;
+//			}
+//		}
+//		
+//		GameController gameController {
+//			get {
+//				return GameController.current as GameController;
+//			}
+//		}
+		
+
 
 		// Triggers
 		public List<EventTrigger.Entry> triggers = new List<EventTrigger.Entry>() {
@@ -144,7 +158,7 @@ namespace RMX {
 			if (paused) {
 				//				myStyle.font = myFont;
 				string text = !information ? this.text :
-					"In total you've only managed to waste " + string.Format("{0:N2}%",gameData.PercentageOfDevTimeWasted) + 
+					"In total you've only managed to waste " + string.Format("{0:N2}%",GameData.current.PercentageOfDevTimeWasted) + 
 						"\n of the time I've lost developing this game." +
 						"\n\n Try again?";
 				GUIStyle style = new GUIStyle ();
@@ -169,37 +183,31 @@ namespace RMX {
 	
 
 		
-		public override void OnEventDidStart(Event theEvent, object info) {
-			switch (theEvent) {
-			case Event.PauseSession:
+		public override void OnEventDidStart(IEvent theEvent, object info) {
+			if (theEvent.IsType( Events.PauseSession))
 				Pause(true);
-				break;
-			case Event.ResumeSession:
+			else if (theEvent.IsType(Events.ResumeSession))
 				Pause(false);
-				break;
-			default:
-				return;
-			}
 		}
 
 		
 		public void Pause(bool pause) {
 			if (pause && !paused) {
 				float time;
-				if (settings.willPauseOnLoad) {
-					time = gameData.currentSessionTime;
-					text = "Congratulations. During your last session, you wasted " + Timer.GetTimeDescription (gameData.currentSessionTime);
-					settings.willPauseOnLoad = false;
+				if (Settings.current.willPauseOnLoad) {
+					time = GameData.current.currentSessionTime;
+					text = "Congratulations. During your last session, you wasted " + Timer.GetTimeDescription (GameData.current.currentSessionTime);
+					Settings.current.willPauseOnLoad = false;
 				} else {
-					time = gameData.currentProcrastination;
-					text = "Congratulations. You have wasted " + Timer.GetTimeDescription (gameData.currentProcrastination);
-					if (settings.newPersonalBest) {
+					time = GameData.current.currentProcrastination;
+					text = "Congratulations. You have wasted " + Timer.GetTimeDescription (GameData.current.currentProcrastination);
+					if (Settings.current.newPersonalBest) {
 						text += "\nA NEW PERSONAL BEST!";
-						settings.newPersonalBest = false;
+						Settings.current.newPersonalBest = false;
 					}
 					
 				}		
-				List<string> activities = gameData.WhatYouCouldHaveDone (time);
+				List<string> activities = GameData.current.WhatYouCouldHaveDone (time);
 				var rand = Random.Range (0, activities.Count); 
 				text += "\n\nDuring that time you could have " + activities [rand];
 			}
@@ -207,16 +215,16 @@ namespace RMX {
 			
 		}
 
-		public override string ToString ()
-		{
-			string s = 
-				"              Last time: " + gameData.currentSessionTime + ", last coninuous: " + gameData.currentProcrastination + ", total time: " + gameData.totalTime +
-					"\nLast Uniterrupted: " + Timer.GetTimeDescription(gameData.currentProcrastination) + " and top: " + Timer.GetTimeDescription(gameData.longestProcrastination) +
-					"\n     Last Session: " + Timer.GetTimeDescription(gameData.currentSessionTime) +
-					"\n            Total: " + Timer.GetTimeDescription(gameData.totalTime)
-					;
-			return s;
-		}
+//		public override string ToString ()
+//		{
+//			string s = 
+//				"              Last time: " + GameData.currentSessionTime + ", last coninuous: " + gameData.currentProcrastination + ", total time: " + gameData.totalTime +
+//					"\nLast Uniterrupted: " + Timer.GetTimeDescription(gameData.currentProcrastination) + " and top: " + Timer.GetTimeDescription(gameData.longestProcrastination) +
+//					"\n     Last Session: " + Timer.GetTimeDescription(gameData.currentSessionTime) +
+//					"\n            Total: " + Timer.GetTimeDescription(gameData.totalTime)
+//					;
+//			return s;
+//		}
 	
 	}
 

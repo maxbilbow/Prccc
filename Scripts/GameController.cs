@@ -3,8 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 //using UnityStandardAssets.CrossPlatformInput;
 
-namespace RMX {
-	public class GameController : ASingleton<GameController> , EventListener {
+namespace RMX.Procrastinate {
+	public class GameController : RMX.Singletons.ASingleton<GameController> { //<GameController> , EventListener {
 		public Vector2 defaultGravity = new Vector2 (0f, -9.81f);
 
 		public Vector2 velocity {
@@ -13,14 +13,19 @@ namespace RMX {
 			}
 		}
 
-		public PauseCanvas pauseCanvas {
-			get {
-				return PauseCanvas.current;
-			}
-		}
+
 		public static bool isFirstPlay {
 			get {
 				return PlayerPrefs.GetString(SavedData.GetKey(UserData.TotalTime)) != null;
+			}
+		}
+
+
+
+
+		GameData gameData {
+			get {
+				return GameData.current;
 			}
 		}
 
@@ -29,7 +34,7 @@ namespace RMX {
 
 
 		void StartSingletons() {
-			Notifications.EventWillStart (Event.SingletonInitialization);
+			Notifications.EventWillStart (Events.SingletonInitialization);
 			Settings.Initialize ();
 			Bugger.Initialize ();
 			GameCenter.Initialize ();
@@ -46,7 +51,7 @@ namespace RMX {
 			#else
 			StartDesktop();
 			#endif
-			Notifications.EventDidEnd (Event.SingletonInitialization);
+			Notifications.EventDidEnd (Events.SingletonInitialization);
 
 		}
 
@@ -63,9 +68,9 @@ namespace RMX {
 		void Start() {
 			Physics2D.gravity = defaultGravity;
 			StartSingletons ();
-			if (settings.willPauseOnLoad) {
-				pauseCanvas.Pause(true);
-				gameController.PauseGame (settings.willPauseOnLoad, SoundEffects.Args.MusicKeepsPlaying);
+			if (Settings.current.willPauseOnLoad) {
+				PauseCanvas.current.Pause(true);
+				gameController.PauseGame (Settings.current.willPauseOnLoad, SoundEffects.Args.MusicKeepsPlaying);
 			}
 		}
 	
@@ -86,8 +91,8 @@ namespace RMX {
 			SavedData.Get(UserData.TotalTime).Float = newTotal;
 			SavedData.Get(UserData.CurrentSession).Float = Time.fixedTime;
 			SavedData.Get(UserData.CurrentProcrastination).Float = currentTotal;
-			settings.newPersonalBest = gameData.currentProcrastination > gameData.longestProcrastination;
-			if (settings.newPersonalBest) {
+			Settings.current.newPersonalBest = gameData.currentProcrastination > gameData.longestProcrastination;
+			if (Settings.current.newPersonalBest) {
 				SavedData.Get(UserData.LongestProctrastination).Float = gameData.currentProcrastination;
 			}
 			if (reset) {
@@ -106,9 +111,9 @@ namespace RMX {
 		
 		void OnApplicationFocus(bool focusStatus) {
 			if (!focusStatus) {
-				WillBeginEvent(Event.PauseSession);//
+				WillBeginEvent(Events.PauseSession);//
 				PauseGame (true);
-				DidFinishEvent(Event.PauseSession);
+				DidFinishEvent(Events.PauseSession);
 			}
 		}
 
@@ -121,23 +126,20 @@ namespace RMX {
 		}
 		public void PauseGame(bool pause, object args) {
 			if (pause) {
-				WillBeginEvent (Event.PauseSession, args);
+				WillBeginEvent (Events.PauseSession, args);
 				Time.timeScale =  0 ;
-				DidFinishEvent (Event.PauseSession, args);
+				DidFinishEvent (Events.PauseSession, args);
 			} else {
-				WillBeginEvent(Event.ResumeSession, args);
+				WillBeginEvent(Events.ResumeSession, args);
 				Time.timeScale = 1;
-				DidFinishEvent(Event.ResumeSession, args);
+				DidFinishEvent(Events.ResumeSession, args);
 			}
 
 		}
 
-		public override void OnEventDidEnd(Event theEvent, object args) {
-			switch (theEvent) {
-			case Event.ResumeSession:
+		public override void OnEventDidEnd(IEvent theEvent, object args) {
+			if (theEvent.IsType(Events.ResumeSession))
 				UpdateScoresAndReset (true);
-				break;
-			}
 		}
 		
 	}

@@ -2,7 +2,7 @@
 using System.Collections;
 
 namespace RMX {
-	public class LookAndFeel : ASingleton<LookAndFeel> {
+	public class LookAndFeel : Singletons.ASingleton<LookAndFeel> {
 
 		public Font mainFont;
 		public Background background;
