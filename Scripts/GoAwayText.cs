@@ -2,7 +2,7 @@
 using UnityStandardAssets;
 using System.Collections;
 using UnityEngine.UI;
-namespace RMX.Procrastinate {
+using RMX;  namespace Procrastinate {
 	public class GoAwayText : MonoBehaviour {
 
 

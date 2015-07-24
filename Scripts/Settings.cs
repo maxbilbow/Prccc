@@ -2,14 +2,15 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace RMX.Procrastinate {
-	
-	public class Settings : Singletons.ASingleton<Settings>, ISettings {
+using RMX; 
+
+namespace Procrastinate {	
+	public class Settings : ASettings<Settings> {
 
 		public int MaxNumberOfClocks = 50; 
 		public TextAsset _database;
 
-		public TextAsset Database {
+		public override TextAsset Database {
 			get {
 				return _database;
 			}
@@ -29,7 +30,7 @@ namespace RMX.Procrastinate {
 
 		public float updateScoresEvery = 1f;
 
-		public bool PrintToScreen {
+		public override bool PrintToScreen {
 			get {
 				return _printToScreen;
 			} set {
@@ -52,7 +53,7 @@ namespace RMX.Procrastinate {
 	
 		public float maxDisplayTime = 5f;
 
-		public float MaxDisplayTime  {
+		public override float MaxDisplayTime  {
 			get {
 				return maxDisplayTime;
 			}
@@ -101,9 +102,9 @@ namespace RMX.Procrastinate {
 
 		}
 
-		public bool IsDebugging(string feature) {
-			if (!GameController.IsInitialized) {
-				Debug.LogWarning ("GameController was not initialized before trying to test " + feature.ToString ());
+		public override bool IsDebugging(string feature) {
+			if (!Singletons.GameControllerInitialized) {
+				Debug.LogWarning ("GameController was not initialized before trying to test " + feature);
 				return false;
 			} else {
 				if (feature == Testing.Misc)
@@ -129,27 +130,5 @@ namespace RMX.Procrastinate {
 				return false;
 			}
 		}
-//		const string tempName = "324329hrNhfeuwh9";
-//		public static T CreateSingleton<T>() where T : ASingleton<T>
-//		{
-//			if (FindObjectOfType(T)) {// T.GetSingleton() != null) {
-//				return T.current;
-//			} else if (GameController.IsInitialized || typeof(T) == typeof(GameController)) {
-//				var aSingleton = new GameObject (tempName).AddComponent<T> ();
-//				if ((aSingleton as ASingleton<T>).Destroyed) {
-//					return null;
-//				}
-//				aSingleton.gameObject.name = aSingleton.GetType ().Name;
-//				if (!(aSingleton is GameController)) {
-//					var parent = GameController.current.gameObject;//GameObject.Find(rootName);
-//					aSingleton.transform.SetParent (parent.transform);
-//				}
-//				return aSingleton;
-//			} else {
-//				Debug.LogError("Gamecontroller should happen before this...");
-//				GameController.lateInits.Add(Initialize);
-//				return null;
-//			}
-//		}
 	}
 }

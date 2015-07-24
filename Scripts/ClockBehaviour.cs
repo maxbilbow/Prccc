@@ -1,8 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using RMX;
 
-namespace RMX.Procrastinate {
+namespace Procrastinate {
 	public class ClockBehaviour : RMX.RMXObject {
 		// Use this for initialization
 		public Vector3 startingPoint;

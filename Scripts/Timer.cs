@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.SocialPlatforms;
-namespace RMX.Procrastinate {
+using RMX;  namespace Procrastinate {
 
 	public class Timer : RMX.Singletons.ASingleton<Timer> {
 

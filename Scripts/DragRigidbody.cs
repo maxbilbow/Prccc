@@ -2,7 +2,9 @@ using System;
 using System.Collections;
 using UnityEngine;
 
-namespace RMX.Procrastinate
+using RMX;
+
+namespace Procrastinate
 {
 	public class DragRigidbody : RMX.Singletons.ASingleton<DragRigidbody>
     {

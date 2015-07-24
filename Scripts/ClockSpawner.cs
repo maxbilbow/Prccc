@@ -1,8 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-
-namespace RMX.Procrastinate {
+using Procrastinate;
+using RMX;  namespace Procrastinate {
 	public class ClockSpawner : RMX.Singletons.ASingleton<ClockSpawner>, EventListener {
 
 		public List<ClockBehaviour> clocks = new List<ClockBehaviour> ();

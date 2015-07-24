@@ -2,8 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System;
+using RMX;
 
-namespace RMX.Procrastinate
+namespace Procrastinate
 {
 	public class Wychd : List<string> {}
 	public class DataReader : RMX.Singletons.ASingleton<DataReader>

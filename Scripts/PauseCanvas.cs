@@ -5,10 +5,10 @@ using UnityEngine.EventSystems;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace RMX.Procrastinate {
+using RMX;  namespace Procrastinate {
 	public class PauseCanvas : Singletons.ASingleton<PauseCanvas>  {
 
-//		Canvas canvas;
+		Canvas canvas;
 		Button infoButton;
 		// Canvas Variables
 		public RenderMode renderMode = RenderMode.ScreenSpaceOverlay;
@@ -31,20 +31,6 @@ namespace RMX.Procrastinate {
 		public Color color = Color.white;
 		public Material material;
 		public bool preserveAspect = false;
-
-//		Settings settings {
-//			get {
-//				return Settings.current;
-//			}
-//		}
-//		
-//		GameController gameController {
-//			get {
-//				return GameController.current as GameController;
-//			}
-//		}
-		
-
 
 		// Triggers
 		public List<EventTrigger.Entry> triggers = new List<EventTrigger.Entry>() {
@@ -72,13 +58,14 @@ namespace RMX.Procrastinate {
 
 		// Use this for initialization
 		 void Start () {
-
-			if (!gameObject.GetComponent<Canvas> ()) {
-				var canvas = gameObject.AddComponent<Canvas> ();
+		 	canvas = gameObject.GetComponent<Canvas> ();
+			if (!canvas) {
+				canvas = gameObject.AddComponent<Canvas> ();
 				canvas.renderMode = renderMode;
 				canvas.pixelPerfect = pixelPerfect;
 				canvas.enabled = false;
 			}
+
 			_canvasReady = true;
 			if (!gameObject.GetComponent<CanvasScaler> ()) {
 				var scalar = gameObject.AddComponent<CanvasScaler> ();
@@ -118,6 +105,11 @@ namespace RMX.Procrastinate {
 
 			infoButton = GetComponentInChildren<Button> ();
 			infoButton.onClick.AddListener (toggleInfo);
+
+			if (Settings.current.willPauseOnLoad) {
+//				PauseCanvas.current.Pause(true);
+				gameController.PauseGame (Settings.current.willPauseOnLoad, SoundEffects.Args.MusicKeepsPlaying);
+			}
 		}
 
 		static void toggleInfo() {
@@ -143,15 +135,18 @@ namespace RMX.Procrastinate {
 			}
 		}
 
-
 		bool _canvasReady = false;
 		bool paused {
 			get {
-				return _canvasReady? gameObject.GetComponent<Canvas> ().enabled : false;
+				return _canvasReady? canvas.enabled : false;
 			} set {
-					gameObject.GetComponent<Canvas> ().enabled = value;
+				canvas.enabled = value;
 			}
 		}
+
+//		public void OnApplicationPause(bool paused) {
+//			GameController.current.PauseGame(paused);
+//		}
 
 		//		bool newSession = true;
 		void OnGUI(){

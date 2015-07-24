@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
+using RMX;  
 
-namespace RMX.Procrastinate {
+namespace Procrastinate {
 	public class Version  {
 	
 		public const float v0_3_6 = 3.06f;

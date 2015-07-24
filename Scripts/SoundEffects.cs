@@ -1,9 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-
-namespace RMX.Procrastinate {
-	public class SoundEffects : RMX.Singletons.ASingleton<SoundEffects> {
+using RMX;  
+namespace Procrastinate {
+	public class SoundEffects : Singletons.ASingleton<SoundEffects> {
 		public const string POP = "pop";
 
 		public enum Args

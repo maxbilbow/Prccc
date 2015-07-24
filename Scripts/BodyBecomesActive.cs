@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace RMX.Procrastinate {
+using RMX;  namespace Procrastinate {
 
 
 	public class BodyBecomesActive : ABonus<Rigidbody2D> {

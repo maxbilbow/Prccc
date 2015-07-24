@@ -5,7 +5,7 @@ using UnityEngine.UI;
 using UnityEditor;
 #endif
 
-namespace RMX.Procrastinate {
+using RMX;  namespace Procrastinate {
 	public class PauseManager : MonoBehaviour {
 
 //		Text text1, text2;

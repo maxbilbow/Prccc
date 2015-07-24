@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
-
-namespace RMX.Procrastinate {
+//using RMX;  
+namespace Procrastinate {
 	public abstract class ABonus<TComponent> : MonoBehaviour
 	where TComponent : Object {
 

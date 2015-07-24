@@ -11,7 +11,7 @@ using System.Runtime.InteropServices;
 
 
 
-namespace RMX.Procrastinate {
+using RMX;  namespace Procrastinate {
 	public class GameCenter : RMX.Singletons.ASingleton<GameCenter> {
 
 
@@ -47,7 +47,8 @@ namespace RMX.Procrastinate {
 			if (theEvent.IsType(Events.PauseSession)) {
 				UpdateGameCenterAchievements ();
 				ReportScore(SavedData.Get(UserData.CurrentProcrastination).Long, UserData.LongestProctrastination);
-			}
+			} else if (theEvent.IsType(Events.ResumeSession))
+				UpdateScoresAndReset (true);
 		}
 
 		public override void OnEvent(IEvent theEvent, object info) {
@@ -130,6 +131,7 @@ namespace RMX.Procrastinate {
 			if (Time.fixedTime > _checkTime) {
 				foreach (UserData key in timeBasedAchievements)
 					HasMetTimeCriteria(key);
+				UpdateScoresAndReset(false);
 				_checkTime = Time.fixedTime + Settings.current.updateScoresEvery;
 			}
 		}
@@ -169,6 +171,21 @@ namespace RMX.Procrastinate {
 				return false; 
 			}
 
+		}
+
+		public void UpdateScoresAndReset(bool reset) {
+			var newTotal = SavedData.Get(UserData.TotalTime).Float + Time.deltaTime;
+			var currentTotal = GameData.current.currentProcrastination + Time.deltaTime;
+			SavedData.Get(UserData.TotalTime).Float = newTotal;
+			SavedData.Get(UserData.CurrentSession).Float = Time.fixedTime;
+			SavedData.Get(UserData.CurrentProcrastination).Float = currentTotal;
+			Settings.current.newPersonalBest = GameData.current.currentProcrastination > GameData.current.longestProcrastination;
+			if (Settings.current.newPersonalBest) {
+				SavedData.Get(UserData.LongestProctrastination).Float = GameData.current.currentProcrastination;
+			}
+			if (reset) {
+				SavedData.Get(UserData.CurrentProcrastination).Float = 0;
+			}
 		}
 
 		/*
@@ -376,6 +393,12 @@ namespace RMX.Procrastinate {
 //			}
 //			return id;
 //		}
+
+		void OnApplicationQuit() {
+			UpdateScoresAndReset (false);
+			ReportScore(GameData.current.PercentageOfDevTimeWastedX10000, UserData.PercentageOfDevTime);
+			PlayerPrefs.Save ();
+		}
 
 
 	}

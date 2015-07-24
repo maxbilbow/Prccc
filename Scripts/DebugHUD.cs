@@ -3,7 +3,7 @@ using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace RMX.Procrastinate {
+using RMX;  namespace Procrastinate {
 	public class DebugHUD : RMX.Singletons.ASingleton<DebugHUD> {
 
 		public GameObject showButton;
