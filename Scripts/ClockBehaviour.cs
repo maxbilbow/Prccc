@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using RMX;
 
 namespace Procrastinate {
-	public class ClockBehaviour : RMXObject {
+	public class ClockBehaviour : RMX.RMXObject {
 		// Use this for initialization
 		public Vector3 startingPoint;
 
