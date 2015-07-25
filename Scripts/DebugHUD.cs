@@ -33,7 +33,9 @@ using RMX;  namespace Procrastinate {
 		}
 
 		string GetTime(UserData key) {
-			return "\n – " + key.ToString () + ": <color=yellow>" + Timer.GetTimeDescription(SavedData.Get (key).Float) + "</color>";
+			var time = SavedData.Get (key).Float;
+			var timeString = time > 0 ? Timer.GetTimeDescription (time) : time.ToString ();
+			return "\n – " + key.ToString () + ": <color=yellow>" + timeString + "</color>";
 		}
 		// Update is called once per frame
 		void OnGUI() {

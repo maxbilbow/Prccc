@@ -19,6 +19,8 @@ using RMX;  namespace Procrastinate {
 		public float totalTime {
 			get {
 				return SavedData.Get(UserData.TotalTime).Float;
+			} set {
+				SavedData.Get(UserData.TotalTime).Float = value;
 			}
 		}
 		
@@ -26,51 +28,37 @@ using RMX;  namespace Procrastinate {
 		public float currentProcrastination {
 			get {
 				return SavedData.Get(UserData.CurrentProcrastination).Float;
+			} set {
+				SavedData.Get(UserData.CurrentProcrastination).Float = value;
 			}
 		}
 		
 		public float currentSessionTime {
 			get {
 				return SavedData.Get(UserData.CurrentSession).Float;
+			} set {
+				SavedData.Get(UserData.CurrentSession).Float = value;
 			}
 		}
 		
 		public float longestProcrastination {
 			get {
 				return SavedData.Get(UserData.LongestProctrastination).Float;
+			} set {
+				SavedData.Get(UserData.LongestProctrastination).Float = value;
 			}
 		}
 
 
 
-//		Settings settings {
-//			get {
-//				return Settings.current;
-//			}
-//		}
-//		
-//		GameController gameController {
-//			get {
-//				return GameController.current as GameController;
-//			}
-//		}
+		void Update() {
+			UpdateScoresAndReset (false);
+		}
 
-
-//		public bool GetSavedData()
-
-//		private long GetLong(UserData data) {
-//			switch (data) {
-//			case UserData.CurrentSession:
-//				return (long) currentSessionTime;
-//			case UserData.CurrentProcrastination:
-//				return (long) currentProcrastination;
-//			case UserData.TotalTime:
-//				return (long) totalTime;
-//			case UserData.OfDevTime:
-//				return (long) (100 * totalTime / settings.TotalDevTimeWasted);
-//			}
-//			return -1;
-//		}
+		void OnApplicationQuit(){
+			UpdateScoresAndReset (false);
+			PlayerPrefs.Save ();
+		}
 
 		public long PercentageOfDevTimeWastedX10000 {
 			get {
@@ -86,7 +74,25 @@ using RMX;  namespace Procrastinate {
 
 
 
-
+		void UpdateScoresAndReset(bool reset) {
+			totalTime += Time.deltaTime;
+			currentProcrastination += Time.deltaTime;
+			currentSessionTime = Time.fixedTime;
+			Settings.current.newPersonalBest = currentProcrastination > longestProcrastination;
+			if (Settings.current.newPersonalBest) {
+				longestProcrastination = currentProcrastination;
+			}
+			if (reset) {
+				currentProcrastination = 0;
+			}
+		}
+	
+		public override void OnEventDidStart(IEvent theEvent, object info) {
+		 	if (theEvent.IsType (Events.ResumeSession))
+				UpdateScoresAndReset (true);
+			else if (theEvent.IsType (Events.PauseSession))
+				UpdateScoresAndReset (false);
+		}
 
 		/*
 		public static UserData GetEnum(string key) {
@@ -118,12 +124,12 @@ using RMX;  namespace Procrastinate {
 
 		public Wychd WhatYouCouldHaveDone(float time) {
 			Wychd result = DataReader.current.GetActivityList (time);
-			var log = Bugger.StartNewLog (Tests.GameDataLists);
-			log.message += "List accessed with time: " + time + ", and " + result.Count + " sentences.";
+			var log = "";
+			log += "List accessed with time: " + time + ", and " + result.Count + " sentences.";
 			if (result.Count > 0) {
-				log.message += "\n - Adding from database...";
+				log += "\n - Adding from database...";
 			} else {
-				log.message += "\n - Found none in Database...";
+				log += "\n - Found none in Database...";
 				float timeInMinutes = time / 60;
 				if (timeInMinutes < 0.5) {
 					result.Add("approved this app for distribution through the app store!");
@@ -147,11 +153,12 @@ using RMX;  namespace Procrastinate {
 					result.Add ("helped a blind person to see with \"Be My Eyes\"");
 				}
 			}
-			if (log.isActive) {
+			if (Settings.ShouldDebug(Tests.GameDataLists)) {
 				foreach (string s in result) {
-					log.message += "\n => " + s;
+					log += "\n => " + s;
 				}
-				Debug.Log(log);
+				if (Bugger.WillLog(Tests.GameDataLists,log))
+					Debug.Log(Bugger.Last);
 			}
 			return result;
 		}

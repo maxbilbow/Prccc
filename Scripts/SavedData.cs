@@ -55,18 +55,37 @@ using RMX;  namespace Procrastinate {
 //				if (!long.TryParse (PlayerPrefs.GetString (key), out result))
 //					Debug.LogWarning(key.ToString() + " GET: " + PlayerPrefs.GetString (key));
 				return float.TryParse (PlayerPrefs.GetString (key), out result) ? (long) result : -1;
-			} set {
-				PlayerPrefs.SetString(key, value.ToString());
-			}
+			} 
+//			set {
+//				if (Bugger.WillTest(Tests.Exceptions)) {
+//					var result = PlayerPrefs.GetString (key);
+//					if (result == TRUE || result == FALSE)
+//						Debug.LogWarning("\"" + value + "\" should be True or False");
+//				}
+//				PlayerPrefs.SetString(key, value.ToString());
+//			}
 		}
-
+		const string TRUE = "True", FALSE = "False";
 		public bool Bool {
 			get {
+				if (Settings.ShouldDebug(Tests.Exceptions)) {
+					var result = PlayerPrefs.GetString (key);
+					if (result != TRUE && result != FALSE && result != "") {
+						var log = Bugger.StartNewLog(Tests.Exceptions, key + ": \"" + result + "\" should be True or False");
+						Debug.Log(log);
+					}
+				}
+
 //				Debug.LogWarning(key.ToString() + " GET: " + PlayerPrefs.GetString (key));
-				return PlayerPrefs.GetString (key) == true.ToString();
+				return PlayerPrefs.GetString (key) == TRUE;
 			} set {
+				if (Settings.ShouldDebug(Tests.Exceptions)) {
+					var result = PlayerPrefs.GetString (key);
+					if (result != TRUE || result != FALSE)
+						Debug.LogWarning(key + ": \"" + value + "\" should be a number");
+				}
 //				Debug.LogWarning(key.ToString() + " SET: " + value);
-				PlayerPrefs.SetString(key, value.ToString());// ? "True" : "False");
+				PlayerPrefs.SetString(key, value ? TRUE : FALSE);
 			}
 		}
 
@@ -76,6 +95,11 @@ using RMX;  namespace Procrastinate {
 				return int.TryParse(PlayerPrefs.GetString(key), out result) ? result : -1;
 			}
 			set {
+				if (Settings.ShouldDebug(Tests.Exceptions)) {
+					var result = PlayerPrefs.GetString (key);
+					if (result == TRUE || result == FALSE)
+						Debug.LogWarning(key + ": \"" + value + "\" should be True or False");
+				}
 				PlayerPrefs.SetString(key,value.ToString());
 			}
 		}
@@ -85,6 +109,11 @@ using RMX;  namespace Procrastinate {
 				float result;
 				return float.TryParse(PlayerPrefs.GetString(key), out result) ? result : -1;
 			} set {
+				if (Settings.ShouldDebug(Tests.Exceptions)) {
+					var result = PlayerPrefs.GetString (key);
+					if (result == TRUE || result == FALSE)
+						Debug.LogWarning(key + ": \"" + value + "\" should be True or False");
+				}
 				PlayerPrefs.SetString(key,value.ToString());
 			}
 		}
@@ -94,6 +123,11 @@ using RMX;  namespace Procrastinate {
 				double result;
 				return double.TryParse(PlayerPrefs.GetString(key), out result) ? result : -1;
 			} set {
+				if (Settings.ShouldDebug(Tests.Exceptions)) {
+					var result = PlayerPrefs.GetString (key);
+					if (result == TRUE || result == FALSE)
+						Debug.LogWarning(key + ": \"" + value + "\" should be True or False");
+				}
 				PlayerPrefs.SetString(key,value.ToString());
 			}
 		}

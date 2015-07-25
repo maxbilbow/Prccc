@@ -99,36 +99,41 @@ namespace Procrastinate {
 #if UNITY_EDITOR
 
 #endif
-
 		}
 
-		public override bool IsDebugging(string feature) {
-			if (!Singletons.GameControllerInitialized) {
-				Debug.LogWarning ("GameController was not initialized before trying to test " + feature);
-				return false;
-			} else {
+		public static bool ShouldDebug(string feature) {
+//			return false;
+			if (Singletons.Settings != null) {
+				var settings = Singletons.Settings as Settings;
 				if (feature == Testing.Misc)
-					return DebugMisc;
+					return settings.DebugMisc;
 				else if (feature == Testing.GameCenter)
-					return DebugGameCenter;
+					return settings.DebugGameCenter;
 				else if (feature == Testing.Achievements)
-					return DebugAchievements;
+					return settings.DebugAchievements;
 				else if (feature == Testing.Exceptions)
-			         return DebugExceptions;
-		        else if (feature == Testing.Singletons)
-			         return DebugSingletons;
-	      	   else if (feature == Tests.GameDataLists)
-					return DebugGameDataLists;
+					return settings.DebugExceptions;
+				else if (feature == Testing.Singletons)
+					return settings.DebugSingletons;
+				else if (feature == Tests.GameDataLists)
+					return settings.DebugGameDataLists;
 				else if (feature == Testing.Patches)
-					return DebugPatches;
+					return settings.DebugPatches;
 				else if (feature == Testing.Database)
-					return DebugDatabase;
+					return settings.DebugDatabase;
 				else if (feature == Testing.EventCenter)
-					return DebugEvents;
+					return settings.DebugEvents;
 				else
 					Debug.LogWarning (feature.ToString () + " has not been recorded in Settings.IsTesting(feature)");
 				return false;
+			} else {
+				Debug.LogWarning("Setting not initialized so debugging anyway: " + feature);
+				return true;
 			}
+		}
+
+		public override bool IsDebugging(string feature) {
+			return ShouldDebug(feature);
 		}
 	}
 }

@@ -32,10 +32,10 @@ using RMX;  namespace Procrastinate {
 		}
 
 
-		void UpdateGameCenterAchievements () {
+		void UpdateGameCenterAchievements () { //TODO
 			foreach (KeyValuePair<UserData,string> id in UniqueID)
 				if (!CheckAchievementsWithGameCenter (id.Key) && SavedData.Get (id.Key).Bool) 
-					ReportProgress (id.Key, true);
+					ReportProgress (id.Key);
 		}
 
 		public override void OnEventDidStart(IEvent theEvent, object info) {
@@ -47,43 +47,42 @@ using RMX;  namespace Procrastinate {
 			if (theEvent.IsType(Events.PauseSession)) {
 				UpdateGameCenterAchievements ();
 				ReportScore(SavedData.Get(UserData.CurrentProcrastination).Long, UserData.LongestProctrastination);
-			} else if (theEvent.IsType(Events.ResumeSession))
-				UpdateScoresAndReset (true);
+			} 
 		}
 
 		public override void OnEvent(IEvent theEvent, object info) {
 			if (theEvent.IsType(Events.GC_AchievementGained))
 				if (info is UserData) {
 					var key = (UserData) info;
-					ReportProgress (key, true);
+					ReportProgress (key);
 					if (Bugger.WillLog (Testing.EventCenter, info.ToString ()))
 						Debug.Log (Bugger.Last);
 			}
 		}
 
 		void Authenticate() {
-			var userInfo = Bugger.StartNewLog (Testing.GameCenter);
+			string userInfo = "";
 			if (!UserAuthenticated) {
 				WillBeginEvent(Events.GC_UserAuthentication);
 				Social.localUser.Authenticate (success => {
 					if (success) {
 						DidFinishEvent (Events.GC_UserAuthentication, EventStatus.Success);
-						userInfo.message += "Authentication successful";
-						userInfo.message += "Username: " + Social.localUser.userName + 
+						userInfo += "Authentication successful";
+						userInfo += "Username: " + Social.localUser.userName + 
 							"\nUser ID: " + Social.localUser.id + 
 							"\nIsUnderage: " + Social.localUser.underage;
 					} else {
 						DidFinishEvent (Events.GC_UserAuthentication, EventStatus.Failure);
-						userInfo.message += "Authentication failed";
+						userInfo += "Authentication failed";
 					}
 				});
 
 
 			} else {
-				userInfo.message += "Authentication already completed\n";
+				userInfo += "Authentication already completed\n";
 			}
-			if (userInfo.isActive)
-				Debug.Log (userInfo);
+			if (Bugger.WillLog(Testing.GameCenter, userInfo))
+				Debug.Log (Bugger.Last);
 		}
 
 //		public bool HasAchieved(UserData key) {
@@ -101,18 +100,18 @@ using RMX;  namespace Procrastinate {
 		public void ReportScore (long score, UserData data) {
 			if (UserAuthenticated && score > 0) {
 				string leaderboardID = UniqueID [data];
-				var log = Bugger.StartNewLog (Testing.GameCenter);
-				log.message += "Reporting score " + score + " on leaderboard " + leaderboardID + "\n";
+				var log = ""; var feature = Testing.GameCenter;
+				log += "Reporting score " + score + " on leaderboard " + leaderboardID + "\n";
 				try {
 					Social.ReportScore (score, leaderboardID, success => {
-						log.message += success ? "Reported score successfully" : "Failed to report score";	
+						log += success ? "Reported score successfully" : "Failed to report score";	
 					});
 				} catch (System.Exception e) {
-					log.message += e;
-					log.feature = Testing.Exceptions;
+					log += e;
+					feature = Testing.Exceptions;
 				} finally {
-					if (log.isActive)
-						Debug.Log(log);
+					if (Bugger.WillLog(feature, log))
+						Debug.Log (Bugger.Last);
 				}
 			}
 		}
@@ -131,7 +130,6 @@ using RMX;  namespace Procrastinate {
 			if (Time.fixedTime > _checkTime) {
 				foreach (UserData key in timeBasedAchievements)
 					HasMetTimeCriteria(key);
-				UpdateScoresAndReset(false);
 				_checkTime = Time.fixedTime + Settings.current.updateScoresEvery;
 			}
 		}
@@ -141,24 +139,25 @@ using RMX;  namespace Procrastinate {
 			return SavedData.Get(key).Bool;
 		}
 
+		const float MINUTES = 60f, HOURS = 60 * 60f;
 		public static bool HasMetTimeCriteria(UserData key) {
 			var totalTime = SavedData.Get(UserData.TotalTime).Float;
 			var result = false;
 			switch (key) {
 			case UserData.AmeteurCrastinator:
-				result = SavedData.Get(key).Bool ? true : totalTime > 20;
+				result = SavedData.Get(key).Bool || totalTime > 20;
 				break;
 			case UserData.TimeWaster:
-				result = SavedData.Get(key).Bool ? true : totalTime > (10 * 60);
+				result = SavedData.Get(key).Bool || totalTime > (10 * MINUTES);
 				break;
 			case UserData.SemiPro:
-				result = SavedData.Get(key).Bool ? true : totalTime > (Settings.current.TotalDevTimeWasted / 4);
+				result = SavedData.Get(key).Bool || totalTime > (Settings.current.TotalDevTimeWasted / 4);
 				break;
 			case UserData.Apathetic:
-				result = SavedData.Get(key).Bool ? true : totalTime > (Settings.current.TotalDevTimeWasted / 2);
+				result = SavedData.Get(key).Bool || totalTime > (Settings.current.TotalDevTimeWasted / 2);
 				break;
 			case UserData.Pro:
-				result = SavedData.Get(key).Bool ? true : totalTime > Settings.current.TotalDevTimeWasted ;//gameData.PercentageOfDevTimeWasted;	
+				result = SavedData.Get(key).Bool || totalTime > Settings.current.TotalDevTimeWasted ;//gameData.PercentageOfDevTimeWasted;	
 				break;
 			default:
 				throw new Exception(key + " Has not ben accounded for in HasMetTimeCriteria(UserData key)");
@@ -166,6 +165,7 @@ using RMX;  namespace Procrastinate {
 	
 			if (result) {// && result != SavedData.Get (key).Bool) { 
 				Notifications.EventDidOccur (Events.GC_AchievementGained, key);
+//				SavedData.Get(key).Bool = true;
 				return true;
 			} else {
 				return false; 
@@ -173,20 +173,7 @@ using RMX;  namespace Procrastinate {
 
 		}
 
-		public void UpdateScoresAndReset(bool reset) {
-			var newTotal = SavedData.Get(UserData.TotalTime).Float + Time.deltaTime;
-			var currentTotal = GameData.current.currentProcrastination + Time.deltaTime;
-			SavedData.Get(UserData.TotalTime).Float = newTotal;
-			SavedData.Get(UserData.CurrentSession).Float = Time.fixedTime;
-			SavedData.Get(UserData.CurrentProcrastination).Float = currentTotal;
-			Settings.current.newPersonalBest = GameData.current.currentProcrastination > GameData.current.longestProcrastination;
-			if (Settings.current.newPersonalBest) {
-				SavedData.Get(UserData.LongestProctrastination).Float = GameData.current.currentProcrastination;
-			}
-			if (reset) {
-				SavedData.Get(UserData.CurrentProcrastination).Float = 0;
-			}
-		}
+
 
 		/*
 		public static bool HasPlayerAchieved(UserData key, bool result) {
@@ -233,8 +220,8 @@ using RMX;  namespace Procrastinate {
 			}
 		}
 		const double EVENT_BASED_ACHIEVEMENT = -1;
-		public void ReportProgress(UserData data, bool achieved) {
-			SavedData.Get(data).Bool = achieved;
+		public void ReportProgress(UserData data) {
+			var achieved = SavedData.Get (data).Bool;
 			var log = Bugger.StartNewLog (Testing.Achievements, "Reporting Progress: " + achieved + "\n");
 
 			float progress = achieved ? 100 : 0;
@@ -347,57 +334,10 @@ using RMX;  namespace Procrastinate {
 			{ UserData.OverTime, _grp + "CgkI2PKS_coeEAIQDQ" }
 		};
 
-//		public string GetID(UserData key) {
-//			#if UNITY_IOS || UNITY_STANDALONE_OSX
-//			string id = "grp.";
-//			#else
-//			string id = "";
-//			#endif
-//
-//			return id + UniqueID [key];
-//
-//			switch (key) {
-//			// Leadership Boards
-//			case UserData.LongestProctrastination:
-//				id += "CgkI2PKS_coeEAIQAw";//"55415446";
-//				break;
-//			case UserData.PercentageOfDevTime:
-//				id += "CgkI2PKS_coeEAIQCA";//"55415445";
-//				break;
-//			// Time Based Achievements
-//			case UserData.AmeteurCrastinator:
-//				id += "CgkI2PKS_coeEAIQAQ";
-//				break;
-//			case UserData.TimeWaster:
-//				id += "CgkI2PKS_coeEAIQBA";
-//				break;
-//			case UserData.Apathetic:
-//				id += "CgkI2PKS_coeEAIQBw";
-//				break;
-//			case UserData.SemiPro:
-//				id += "CgkI2PKS_coeEAIQBQ";
-//				break;
-//			case UserData.Pro:
-//				id += "CgkI2PKS_coeEAIQBg";
-//				break;
-//			// Event Based Achievements
-//			case UserData.MakingTime:
-//				id += "CgkI2PKS_coeEAIQCQ";
-//				break;
-//			case UserData.BigTime:
-//				id += "CgkI2PKS_coeEAIQDA";
-//				break;
-//			case UserData.OverTime:
-//				id += "CgkI2PKS_coeEAIQDQ";
-//				break;
-//			}
-//			return id;
-//		}
 
 		void OnApplicationQuit() {
-			UpdateScoresAndReset (false);
 			ReportScore(GameData.current.PercentageOfDevTimeWastedX10000, UserData.PercentageOfDevTime);
-			PlayerPrefs.Save ();
+
 		}
 
 
