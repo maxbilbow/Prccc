@@ -106,11 +106,14 @@ namespace Procrastinate {
 
 			infoButton = GetComponentInChildren<Button> ();
 			infoButton.onClick.AddListener (toggleInfo);
+//			if (GameController.current.willPauseOnLoad) {
+//				BuildWychd();
+//			}
 
-			if (GameController.current.willPauseOnLoad) {
-//				PauseCanvas.current.Pause(true);
-				gameController.PauseGame (GameController.current.willPauseOnLoad, SoundEffects.Args.MusicKeepsPlaying);
-			}
+			if (SavedData.Get<bool>(UserData.gd_has_played_before) && SavedData.Get<float>(UserData.gd_current_session) > 0){
+				GameController.current.PauseGame (true, Event.FirstPause);
+			}	
+
 //			_canvasReady = true;
 		}
 
@@ -118,51 +121,38 @@ namespace Procrastinate {
 			current.information = !current.information;
 		}
 
-		bool information = false;
-		// Update is called once per frame
-	
+		bool information = false;	
 
 		public void ShowInfo() {
 			information = !information;
 		}
 
-//		public bool Paused {
-//			get {
-//				return paused;
+
+		string _wychd;
+
+//		void OnApplicationFocus(bool focusStatus) {
+//			if (!focusStatus) {
+//				PauseGame (true, null);
 //			}
 //		}
 
-//		bool _canvasReady = false;
-//		bool paused {
-//			get {
-//				return _canvasReady? canvas.enabled : false;
-//			} set {
-//				canvas.enabled = value;
-//			}
-//		}
-
-//		public void OnApplicationPause(bool paused) {
-//			GameController.current.PauseGame(paused);
-//		}
-
-		string _wychd = "error";
-		string _timeText = "error";
 		void Update () {
-			canvas.enabled = GameController.current.isPaused;
+			if (canvas != null)
+				canvas.enabled = GameController.current.isPaused;
 		}
 		//		bool newSession = true;
 		void OnGUI(){
 			if (canvas.enabled) {
-				string text = "";
-				if (!information) {
-					text = _timeText + _wychd;
-					//				myStyle.font = myFont;
-				} else {
-					text =  
-						"In total you've only managed to waste " + string.Format("{0:N2}%",GameData.PercentageOfDevTimeWasted) + 
+				if (_wychd == null) {// && _timeText == null) {
+						BuildWychd(Event.FirstPause);
+//						GameController.current.PauseGame (false, null);
+						Debug.LogWarning("timeText not initialized - game unpaused");
+
+				}
+
+				string text = !information ? _wychd : "In total you've only managed to waste " + string.Format("{0:N2}%",GameData.PercentageOfDevTimeWasted) + 
 							"\n of the time I've lost developing this game." +
 							"\n\n Try again?";
-				}
 				GUIStyle style = new GUIStyle ();
 				style.fontSize = 50;
 				style.richText = true;
@@ -177,32 +167,34 @@ namespace Procrastinate {
 			}
 		}
 		
+		void BuildWychd (Event args = Event.NULL) {
+			float time = 0; 
+			var activities = GameData.WhatYouCouldHaveDone (time);
+			
+			if (args.Equals(Event.FirstPause)) {
+				_wychd = "Congratulations. During your last session, you wasted ";
+				time = SavedData.Get<float> (UserData.gd_current_session);
+			} else {
+				_wychd = "Congratulations. You have wasted ";
+				time = SavedData.Get<float> (UserData.gd_current_procrastination);
+			}
+			
+			_wychd += TextFormatter.TimeDescription (time);
+			
+			if (GameController.current.newPersonalBest) {
+				_wychd += "\nA NEW PERSONAL BEST!";
+				GameController.current.newPersonalBest = false;
+			}
+			
+			_wychd += "\n\nDuring that time you could have " + activities [Random.Range (0, activities.Count)];
+		}
 
-
-		public override void OnEventDidStart(IEvent theEvent, object info) {
-			if (theEvent.IsType (Events.PauseSession)) {
+		public override void OnEventDidStart(System.Enum theEvent, object info) {
+			if (theEvent.Equals (RMX.Event.PauseSession)) {
 				canvas.enabled = true;
-				var time = SavedData.Get<float> (
-					GameController.current.willPauseOnLoad ? UserData.gd_current_session : UserData.gd_current_procrastination);
-				var activities = GameData.WhatYouCouldHaveDone (time);
+				BuildWychd(info is Event ? (Event) info : Event.NULL);
 
-				if (GameController.current.willPauseOnLoad) {
-					_timeText = "Congratulations. During your last session, you wasted ";
-					GameController.current.willPauseOnLoad = false;
-				} else {
-					_timeText = "Congratulations. You have wasted ";
-				}
-
-				_timeText += TextFormatter.TimeDescription (time);
-
-				if (GameController.current.newPersonalBest) {
-					_timeText += "\nA NEW PERSONAL BEST!";
-					GameController.current.newPersonalBest = false;
-				}
-
-				_wychd = "\n\nDuring that time you could have " + activities [Random.Range (0, activities.Count)];
-
-			} else if (theEvent.IsType(Events.ResumeSession)) {
+			} else if (theEvent.Equals(RMX.Event.ResumeSession)) {
 				canvas.enabled = false;
 			}
 		}

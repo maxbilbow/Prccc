@@ -2,11 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Xml;
-using RMX;  namespace Procrastinate {
+using RMX;  
 
-
-
-
+namespace Procrastinate {
 	public class GameData : RMX.Singletons.ASingleton<GameData> {
 		/// <summary>
 		/// Usually true after the game was turned off and on
@@ -15,7 +13,11 @@ using RMX;  namespace Procrastinate {
 	
 
 
-
+		public static bool FirstLoad {
+			get {
+				return SavedData.Get<float>(UserData.gd_current_session) != Time.fixedTime;
+			}
+		}
 		public static float totalTime {
 			get {
 				return SavedData.Get<float>(UserData.gd_total_time_Wasted);
@@ -87,10 +89,10 @@ using RMX;  namespace Procrastinate {
 			}
 		}
 	
-		public override void OnEventDidStart(IEvent theEvent, object info) {
-		 	if (theEvent.IsType (Events.ResumeSession))
+		public override void OnEventDidStart(System.Enum theEvent, object info) {
+		 	if (theEvent.Equals (RMX.Event.ResumeSession))
 				UpdateScoresAndReset (true);
-			else if (theEvent.IsType (Events.PauseSession))
+			else if (theEvent.Equals (RMX.Event.PauseSession))
 				UpdateScoresAndReset (false);
 		}
 

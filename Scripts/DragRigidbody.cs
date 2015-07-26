@@ -174,9 +174,9 @@ namespace Procrastinate
 			}
 		}
 
-		public override void OnEventDidEnd (IEvent theEvent, object args)
+		public override void OnEventDidEnd (System.Enum theEvent, object args)
 		{
-			if (theEvent.IsType(Events.SpawnInflatableClock))
+			if (theEvent.Equals(Event.SpawnInflatableClock))
 				if (args is ClockBehaviour) {
 					AttachBody((args as ClockBehaviour).body, Input.GetTouch(Input.touchCount - 1),0);
 				}

@@ -17,7 +17,7 @@ namespace Procrastinate
 
 		static TextAsset Database {
 			get {
-				return Singletons.Settings.Database;
+				return Singletons.GameController.Database;
 			}
 		}
 
@@ -101,7 +101,7 @@ namespace Procrastinate
 					try {
 						list.Add (thing [csv_text]);
 					} catch (Exception e) {
-						if (Bugger.WillLog (Testing.Exceptions, thing + " :: " + e.ToString ()))
+						if (Bugger.WillLog (RMXTests.Exceptions, thing + " :: " + e.ToString ()))
 							Debug.Log (Bugger.Last);
 					}
 				}

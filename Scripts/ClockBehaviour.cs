@@ -24,13 +24,13 @@ namespace Procrastinate {
 				inflationSpeed *= 0.975f;
 				transform.localScale *= 1 + inflationSpeed;
 				if (inflationSpeed < 0.0004) { 
-					DidCauseEvent(Events.SomethingBurst);
-					DidFinishEvent(Events.ClockIsAboutToBurst);
-					DidCauseEvent(Events.GC_AchievementGained,UserData.ach_big_time);
+					DidCauseEvent(Event.SomethingBurst);
+					DidFinishEvent(Event.ClockIsAboutToBurst);
+					DidCauseEvent(RMX.Event.GC_AchievementGained,UserData.ach_big_time);
 					Destroy (this.gameObject);
 					return true;
 				} else if (inflationSpeed < 0.005) {
-					WillBeginEvent(Events.ClockIsAboutToBurst);
+					WillBeginEvent(Event.ClockIsAboutToBurst);
 					var color = spriteRenderer.color;
 					spriteRenderer.color = new Color(color.r * 1.01f, color.g * 0.98f, color.b * 0.99f);
 				}

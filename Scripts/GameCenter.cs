@@ -18,17 +18,11 @@ namespace Procrastinate {
 		void Start() {
 			GameCenterPlatform.ShowDefaultAchievementCompletionBanner (true);
 			Authenticate ();
-//			TimeBasedAchievementsShouldUpdate ();
-
-
-		
-
-		
 			UpdateGameCenterAchievements ();
-			GameController.current.willPauseOnLoad = SavedData.Get<float>(UserData.gd_current_session) > 0;
-			if (GameController.current.willPauseOnLoad) {
-				GameController.current.PauseGame(true, null);
-			}
+//			GameController.current.willPauseOnLoad = SavedData.Get<float>(UserData.gd_current_session) > 0;
+//			if (GameController.current.willPauseOnLoad) {
+//				GameController.current.PauseGame(true, null);
+//			}
 
 		}
 
@@ -41,68 +35,72 @@ namespace Procrastinate {
 					try {
 						var successInGC = CheckAchievementsWithGameCenter (id.Key);
 						if (successInSD != successInGC) 
-							DidCauseEvent (Events.GC_AchievementGained, id.Key);
+							DidCauseEvent (RMX.Event.GC_AchievementGained, id.Key);
 						log += " => " + id.Key + " SD: " + successInSD + ", GC: " + successInGC + "\n";
 					
 					} catch {
 						log += " => " + id.Key + " Should be in GC: " + successInSD + "\n";
 					}
 				}
-				if (Bugger.WillLog (Tests.Misc, log))
-					Debug.Log (Bugger.Last);
+
 			}
-//			foreach (KeyValuePair<UserData,string> id in UniqueID) {
-//				if (!CheckAchievementsWithGameCenter (id.Key) && SavedData.Get<bool> (id.Key)) 
-//					ReportProgress (id.Key);
-//
-//			}
+			if (Bugger.WillLog (RMXTests.Misc, log))
+				Debug.Log (Bugger.Last);
+
 		}
 
-		public override void OnEventDidStart(IEvent theEvent, object info) {
-			if (theEvent.IsType(Events.PauseSession))
+		public override void OnEventDidStart(System.Enum theEvent, object info) {
+			if (theEvent.Equals(RMX.Event.PauseSession))
 				Authenticate ();
 		}
 
-		public override void OnEventDidEnd(IEvent theEvent, object info) {
-			if (theEvent.IsType(Events.PauseSession)) {
+		public override void OnEventDidEnd(System.Enum theEvent, object info) {
+			if (theEvent.Equals(RMX.Event.PauseSession)) {
 				UpdateGameCenterAchievements ();
 				ReportScore(SavedData.Get<long>(UserData.gd_current_procrastination), UserData.sc_longest_procrastination);
 			} 
 		}
 
-		public override void OnEvent(IEvent theEvent, object info) {
-			if (theEvent.IsType (Events.GC_AchievementGained))
+		public override void OnEvent(System.Enum theEvent, object info) {
+			if (theEvent.Equals (RMX.Event.GC_AchievementGained))
 				if (info is UserData) {
 					var key = (UserData)info;
 					SavedData.Set (key, true);
 					ReportProgress (key);
-					if (Bugger.WillLog (Testing.EventCenter, "Achievement Gained: " + info.ToString ()))
+				if (Bugger.WillLog (RMXTests.EventCenter, "Achievement Gained: " + info.ToString ()))
 						Debug.Log (Bugger.Last);
 				}
 		}
 
 		void Authenticate() {
-			string userInfo = "";
+			string log = "";
 			if (!UserAuthenticated) {
-				WillBeginEvent(Events.GC_UserAuthentication);
-				Social.localUser.Authenticate (success => {
-					if (success) {
-						DidFinishEvent (Events.GC_UserAuthentication, EventStatus.Success);
-						userInfo += "Authentication successful";
-						userInfo += "\nUsername: " + Social.localUser.userName + 
-							"\nUser ID: " + Social.localUser.id + 
-							"\nIsUnderage: " + Social.localUser.underage;
-					} else {
-						DidFinishEvent (Events.GC_UserAuthentication, EventStatus.Failure);
-						userInfo += "Authentication failed";
-					}
-				});
+				WillBeginEvent(RMX.Event.GC_UserAuthentication);
+				try {
+					Social.localUser.Authenticate (success => {
+						if (success) {
+							DidFinishEvent (RMX.Event.GC_UserAuthentication, EventStatus.Success);
+							UserAuthenticated = true;
+							log += "Authentication successful";
+							log += "\nUsername: " + Social.localUser.userName + 
+								"\nUser ID: " + Social.localUser.id + 
+								"\nIsUnderage: " + Social.localUser.underage;
+						} else {
+							DidFinishEvent (RMX.Event.GC_UserAuthentication, EventStatus.Failure);
+							UserAuthenticated = false;
+							log += "Authentication failed";
+						}
+					});
+				} catch (Exception e) {
+					UserAuthenticated = false;
+					log += e.Message;
+				}
 
 
 			} else {
-				userInfo += "Authentication already completed";
+				log += "Authentication already completed";
 			}
-			if (Bugger.WillLog(Testing.GameCenter, userInfo))
+			if (Bugger.WillLog(RMXTests.GameCenter, log))
 				Debug.Log (Bugger.Last);
 		}
 
@@ -111,7 +109,7 @@ namespace Procrastinate {
 		public void ReportScore (long score, UserData data) {
 			if (UserAuthenticated && score > 0) {
 				string leaderboardID = UniqueID [data];
-				var log = ""; var feature = Testing.GameCenter;
+				var log = ""; var feature = RMXTests.GameCenter;
 				log += "Reporting score " + score + " on leaderboard " + leaderboardID;
 				try {
 					Social.ReportScore (score, leaderboardID, success => {
@@ -119,7 +117,7 @@ namespace Procrastinate {
 					});
 				} catch (System.Exception e) {
 					log += e;
-					feature = Testing.Exceptions;
+					feature = RMXTests.Exceptions;
 				} finally {
 					if (Bugger.WillLog(feature, log))
 						Debug.Log (Bugger.Last);
@@ -147,7 +145,7 @@ namespace Procrastinate {
 //						log += " => "+ key + ": is NOT a time-based achievement\n";
 					}
 				}
-				if (Bugger.WillLog(Tests.Achievements, log))
+				if (Bugger.WillLog(RMXTests.Achievements, log))
 					Debug.Log(Bugger.Last);
 				_checkTime = Time.fixedTime + GameController.current.updateScoresEvery;
 			}
@@ -191,7 +189,7 @@ namespace Procrastinate {
 			}
 	
 			if (result) {// && result != SavedData.Get (key).Bool) { 
-				NotificationCenter.EventDidOccur (Events.GC_AchievementGained, key);
+				NotificationCenter.EventDidOccur (RMX.Event.GC_AchievementGained, key);
 				SavedData.Set(key, true);
 				return true;
 			} else {
@@ -202,15 +200,18 @@ namespace Procrastinate {
 
 
 
-		static bool UserAuthenticated {
-			get {
-				return NotificationCenter.StatusOf(Events.GC_UserAuthentication) == EventStatus.Success;
-			}
-		}
+		static bool UserAuthenticated = false;
+//		{
+//			get {
+//				return NotificationCenter.StatusOf(RMX.Event.GC_UserAuthentication) == EventStatus.Success;
+//			}
+//		}
 
 		public void ReportProgress(UserData data) {
 			var achieved = SavedData.Get<bool> (data);
-			var log = data.ToString() + " => Reporting Progress: " + achieved; var feature = Testing.Achievements;
+			if (!achieved)
+				return;
+			var log = data.ToString() + " => Reporting Progress: " + achieved; var feature = RMXTests.Achievements;
 
 			float progress = achieved ? 100 : 0;
 
@@ -225,7 +226,7 @@ namespace Procrastinate {
 					GKAchievementReporter.ReportAchievement(UniqueID[data], progress, true);
 					log += " => SUCCESS";
 				} catch (Exception e){
-					if (Bugger.WillLog(Testing.Exceptions,e.Message) || Bugger.WillLog(Testing.Achievements,e.Message) )
+					if (Bugger.WillLog(RMXTests.Exceptions,e.Message) || Bugger.WillLog(RMXTests.Achievements,e.Message) )
 						Debug.Log(Bugger.Last);
 				}
 				#else
@@ -239,7 +240,7 @@ namespace Procrastinate {
 						}
 					});
 				} catch (Exception e){
-					if (Bugger.WillLog(Testing.Exceptions,e.Message) || Bugger.WillLog(Testing.Achievements,e.Message) )
+					if (Bugger.WillLog(RMXTests.Exceptions,e.Message) || Bugger.WillLog(RMXTests.Achievements,e.Message) )
 						Debug.Log(Bugger.Last);
 				}
 				#endif
@@ -268,13 +269,13 @@ namespace Procrastinate {
 								}
 							}
 						} else {
-							if (Bugger.WillLog(Testing.Achievements,log) )
+							if (Bugger.WillLog(RMXTests.Achievements,log) )
 								Debug.Log(Bugger.Last);
 							throw new System.ArgumentException ("No achievements returned");
 						}
 					});
 				} catch (System.ArgumentException e) {
-					if (Bugger.WillLog(Testing.Exceptions,e.Message) || Bugger.WillLog(Testing.Achievements,e.Message) )
+					if (Bugger.WillLog(RMXTests.Exceptions,e.Message) || Bugger.WillLog(RMXTests.Achievements,e.Message) )
 						Debug.Log(Bugger.Last);
 				}
 			}
@@ -282,13 +283,13 @@ namespace Procrastinate {
 		}
 
 
-		private void InitializeKeys() {
-			#if UNITY_IOS || UNITY_STANDALONE_OSX
-			foreach (KeyValuePair<UserData,string> pair in UniqueID) {
-				UniqueID[pair.Key] = "grp." + pair.Value;
-			}
-			#endif
-		}
+//		private void InitializeKeys() {
+//			#if UNITY_IOS || UNITY_STANDALONE_OSX
+//			foreach (KeyValuePair<UserData,string> pair in UniqueID) {
+//				UniqueID[pair.Key] = "grp." + pair.Value;
+//			}
+//			#endif
+//		}
 
 		#if UNITY_IOS || UNITY_STANDALONE_OSX
 		const string _grp = "grp.";

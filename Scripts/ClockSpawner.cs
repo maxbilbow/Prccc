@@ -39,10 +39,10 @@ using RMX;  namespace Procrastinate {
 					if (GameCenter.HasPlayerAlreadyAchieved (UserData.ach_time_waster))
 						if (Input.touchCount > 1) {
 							if (Spawn ())// && !GameCenter.current.HasAchieved (UserData.MakingTime))
-								DidCauseEvent(Events.GC_AchievementGained, UserData.ach_making_time);
+								DidCauseEvent(RMX.Event.GC_AchievementGained, UserData.ach_making_time);
 							if (ShouldKillClocks) {
 						if (clocks.Count > GameController.current.MaxNumberOfClocks)// && !GameCenter.current.HasAchieved (UserData.OverTime))
-									DidCauseEvent(Events.GC_AchievementGained, UserData.ach_overtime);
+							DidCauseEvent(RMX.Event.GC_AchievementGained, UserData.ach_overtime);
 								var toDestroy = clocks [1];
 								//					clocks.RemoveAt(1);
 								Destroy (toDestroy.gameObject);
@@ -54,9 +54,9 @@ using RMX;  namespace Procrastinate {
 						if (Input.touchCount == 2) {
 							forTouch = 1;
 							if (!inflatableClock) {
-								WillBeginEvent(Events.SpawnInflatableClock);
+						WillBeginEvent(Event.SpawnInflatableClock);
 								inflatableClock = ClockBehaviour.New();
-								DidFinishEvent(Events.SpawnInflatableClock, inflatableClock);
+						DidFinishEvent(Event.SpawnInflatableClock, inflatableClock);
 		//						inflatableClock.lastScale = inflatableClock.transform.localScale;
 								inflatableClock.transform.localScale = new Vector3(0.1f,0.1f,0.1f);
 
@@ -83,7 +83,7 @@ using RMX;  namespace Procrastinate {
 						return pos;
 					}
 				} catch (System.Exception e) {
-					if (Bugger.WillLog(Testing.Exceptions,e.Message))
+					if (Bugger.WillLog(RMXTests.Exceptions,e.Message))
 						Debug.Log(Bugger.Last);
 				} finally {
 					pos = ClockBehaviour.original.startingPoint;
@@ -99,11 +99,11 @@ using RMX;  namespace Procrastinate {
 				firstLoad = false;
 				return false;
 			} else if (GameController.current.ChanceGiven(UserData.ach_time_waster)) {
-				WillBeginEvent(Events.SpawnMultipleClocks);
+				WillBeginEvent(Event.SpawnMultipleClocks);
 				var count = Input.touchCount;
 				forTouch = Random.Range(1,count);
 				ClockBehaviour.New();
-				DidFinishEvent(Events.SpawnMultipleClocks);
+				DidFinishEvent(Event.SpawnMultipleClocks);
 				return true;
 			}
 			return false;
@@ -111,8 +111,8 @@ using RMX;  namespace Procrastinate {
 
 
 		
-		public override void OnEventDidEnd(IEvent theEvent, object info) {
-			if (theEvent.IsType(Events.ResumeSession))
+		public override void OnEventDidEnd(System.Enum theEvent, object info) {
+			if (theEvent.Equals(RMX.Event.ResumeSession))
 			if (GameController.current.ClockSpawnMode == SpawnMode.Inflate) {
 				GameController.current.ClockSpawnMode = SpawnMode.Multiply;
 					Spawn();

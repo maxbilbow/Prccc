@@ -12,9 +12,9 @@ using RMX;
 
 namespace Procrastinate
 {
-	public class Tests : RMX.Testing
+	public enum Tests
 	{
-		public static string GameDataLists = "GameDataLists";
+		GameDataLists
 		
 	}
 }

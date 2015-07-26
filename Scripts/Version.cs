@@ -66,7 +66,7 @@ namespace Procrastinate {
 					_failedPatch = true;
 					log += "Update failed: " + e.Message;
 				}
-				if (Bugger.WillLog(Testing.Patches,log))
+				if (Bugger.WillLog(RMXTests.Patches,log))
 					Debug.Log (Bugger.Last);
 			} 
 //			else if (Bugger.WillTest (Testing.Patches)) {
@@ -225,7 +225,7 @@ namespace Procrastinate {
 			} else {
 				record += "\n<color=blue>Not updating: </color> Old Key does not exist.";
 			}
-			if (Bugger.WillLog(Testing.Patches,record))
+			if (Bugger.WillLog(RMXTests.Patches,record))
 				Debug.Log (Bugger.Last);
 
 		}

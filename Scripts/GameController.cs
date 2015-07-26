@@ -3,16 +3,18 @@ using System.Collections;
 using System.Collections.Generic;
 using RMX; 
 
-namespace Procrastinate {
-	public class GameController : AGameController<GameController>, IGameController {
 
+
+namespace Procrastinate {
+
+	public class GameController : AGameController<GameController> {
 		public int MaxNumberOfClocks = 50; 
 		
 		
 		
 		public float FingerSize = 0.3f;
 		public ClockSpawner.SpawnMode ClockSpawnMode;// = ClockSpawner.SpawnMode.Inflate;
-		public bool willPauseOnLoad = false;
+		 bool willPauseOnLoad = false;
 		public bool newPersonalBest = false;
 
 		public float updateScoresEvery = 1f;
@@ -71,13 +73,6 @@ namespace Procrastinate {
 		protected override void StartMobile() {
 			Gyro.Initialize();
 		}
-
-
-
-
-		
-		
-
 		
 		protected override void PreStart() {
 			_chance = Random.Range (10,90);
@@ -95,29 +90,33 @@ namespace Procrastinate {
 			if (Random.Range(1,10) > 5)
 				ClockSpawnMode = ClockSpawner.SpawnMode.Multiply;
 		}
-		
-		
-		public static bool ShouldDebug(string feature) {
-			if (Singletons.GameControllerInitialized) {
-				var settings = Singletons.GameController as GameController;
-				if (feature == Tests.GameDataLists)
-					return settings.DebugGameDataLists;
-				return false;
-			}
-			throw new UnityException ("Setting should be initialized by now (Testing: " + feature);
-			
-		}
-		
-		public override bool IsDebugging(string feature) {
-			return ShouldDebug(feature) || base.IsDebugging(feature);
+
+		protected override void PostStart ()
+		{
+
 		}
 		
 		void OnApplicationFocus(bool focusStatus) {
 			if (!focusStatus) {
-				PauseGame (true, null);
+				PauseGame(true);
 			}
 		}
 
+		void OnApplicationPause(bool pause) {
+			if (pause) {
+				PauseGame(true);
+			}
+		}
+
+
+		public void PauseGame(bool Pause) {
+			if (willPauseOnLoad) {
+				PauseGame (true, Event.FirstPause);
+				willPauseOnLoad = false;
+			} else {
+				PauseGame(true, null);
+			}
+		}
 		public static void CheckForAnomalies() {
 			ClockBehaviour.CheckVisibleClocks ();
 		}
@@ -132,17 +131,32 @@ namespace Procrastinate {
 			}
 		}
 
-		public override void PauseGame(bool pause, object args = null) {
-			if (pause) {
-				WillBeginEvent (Events.PauseSession, args);
+		public override void PauseGame(bool pause, object args) {
+			if (Bugger.WillLog (RMXTests.Misc, "Pause: " + pause + ", args: " + (args != null ? args.ToString():"none")))
+				Debug.Log (Bugger.Last);
+			if (pause && !isPaused) {
+				WillBeginEvent (RMX.Event.PauseSession, args);
 				Time.timeScale = 0;
-				DidFinishEvent (Events.PauseSession, args);
-			} else {
-				WillBeginEvent(Events.ResumeSession, args);
+				DidFinishEvent (RMX.Event.PauseSession, args);
+			} else if (!pause && isPaused) {
+				WillBeginEvent (RMX.Event.ResumeSession, args);
 				Time.timeScale = 1;
-				DidFinishEvent(Events.ResumeSession, args);
+				willPauseOnLoad = false;
+				DidFinishEvent (RMX.Event.ResumeSession, args);
+			} else if (Bugger.WillLog (RMXTests.Misc, "Pause: " + pause + ", args: " + (args != null ? args.ToString():args))) {
+					Debug.LogWarning ("Superflouous PauseGame(" + pause + ") call");
 			}
 
+		}
+
+		public override bool IsDebugging(System.Enum feature) {
+			if (_buildForRelease)
+				return false;
+			else if (feature.Equals(Tests.GameDataLists))
+				return DebugGameDataLists;
+			else 
+				return base.IsDebugging (feature);
+		
 		}
 
 		void Update() {
