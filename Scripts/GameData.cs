@@ -16,7 +16,7 @@ using RMX;  namespace Procrastinate {
 
 
 
-		public float totalTime {
+		public static float totalTime {
 			get {
 				return SavedData.Get<float>(UserData.gd_total_time_Wasted);
 			} set {
@@ -25,7 +25,7 @@ using RMX;  namespace Procrastinate {
 		}
 		
 		
-		public float currentProcrastination {
+		public static float currentProcrastination {
 			get {
 				return SavedData.Get<float>(UserData.gd_current_procrastination);
 			} set {
@@ -33,7 +33,7 @@ using RMX;  namespace Procrastinate {
 			}
 		}
 		
-		public float currentSessionTime {
+		public static float currentSessionTime {
 			get {
 				return SavedData.Get<float>(UserData.gd_current_session);
 			} set {
@@ -41,7 +41,7 @@ using RMX;  namespace Procrastinate {
 			}
 		}
 		
-		public float longestProcrastination {
+		public static float longestProcrastination {
 			get {
 				return SavedData.Get<float>(UserData.sc_longest_procrastination);
 			} set {
@@ -60,15 +60,15 @@ using RMX;  namespace Procrastinate {
 			PlayerPrefs.Save ();
 		}
 
-		public long PercentageOfDevTimeWastedX10000 {
+		public static long PercentageOfDevTimeWastedX10000 {
 			get {
 				return (long) (PercentageOfDevTimeWasted * 10000);
 			}
 		}
 
-		public double PercentageOfDevTimeWasted {
+		public static double PercentageOfDevTimeWasted {
 			get {
-				return GameData.current.totalTime / GameController.current.TotalDevTimeWasted;
+				return totalTime / GameController.current.TotalDevTimeWasted;
 			}
 		}
 
@@ -94,22 +94,8 @@ using RMX;  namespace Procrastinate {
 				UpdateScoresAndReset (false);
 		}
 
-		/*
-		public static UserData GetEnum(string key) {
-			switch (key) {
-			case Key.LastSession:
-				return UserData.CurrentSession;
-			case Key.LastProcrastination:
-				return UserData.CurrentProcrastination;
-			case Key.Total:
-				return UserData.Total;
-			default:
-				throw new System.ArgumentNullException("Key was not recognised in GameData.GetEnum(string key)");
-			} 
-
-		}
-*/
-		public void TestData ()
+	
+		public static void TestData ()
 		{
 			float[] testTimes = { 10f, 20f, 30f, 45f, 60f, 120f, 3000f, 6000f, 80000f };
 			foreach (float time in testTimes) {
@@ -122,7 +108,7 @@ using RMX;  namespace Procrastinate {
 			
 		}
 
-		private Wychd DefaultList(float time) {
+		private static Wychd DefaultList(float time) {
 			Wychd result = new Wychd ();
 			float timeInMinutes = time / 60;
 			if (timeInMinutes < 0.5) {
@@ -149,7 +135,7 @@ using RMX;  namespace Procrastinate {
 			return result;
 		}
 
-		public Wychd WhatYouCouldHaveDone(float time) {
+		public static Wychd WhatYouCouldHaveDone(float time) {
 			var log = "";
 			Wychd result = null;
 			try {

@@ -47,7 +47,7 @@ namespace Procrastinate {
 			if (theEvent.IsType(Events.ClockIsAboutToBurst))
 				tracks ["poppy1"].Play ();
 			else if (theEvent.IsType(Events.PauseSession))
-				if (info == null || (Args) info != SoundEffects.Args.MusicKeepsPlaying)
+				if (info == null || (Args) info != Args.MusicKeepsPlaying)
 					tracks["music"].Pause();
 		}
 

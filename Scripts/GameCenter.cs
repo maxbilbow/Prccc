@@ -311,7 +311,7 @@ namespace Procrastinate {
 
 
 		void OnApplicationQuit() {
-			ReportScore(GameData.current.PercentageOfDevTimeWastedX10000, UserData.sc_total_as_percent_of_dev);
+			ReportScore(GameData.PercentageOfDevTimeWastedX10000, UserData.sc_total_as_percent_of_dev);
 
 		}
 
