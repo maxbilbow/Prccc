@@ -7,7 +7,7 @@ using RMX;
 namespace Procrastinate
 {
 	public class Wychd : List<string> {}
-	public class DataReader : RMX.Singletons.ASingleton<DataReader>
+	public static class DataReader // : RMX.Singletons.ASingleton<DataReader>
 	{
 		public const float variation = 0.2f;
 		public const int csv_time = 2;
@@ -15,7 +15,7 @@ namespace Procrastinate
 		public const int csv_approved = 3;
 
 
-		TextAsset database {
+		static TextAsset Database {
 			get {
 				return Singletons.Settings.Database;
 			}
@@ -65,10 +65,10 @@ namespace Procrastinate
 			} 
 		}
 		
-		private List<List<string>> GetActivities(float inTime) {
+		private static List<List<string>> GetActivities(float inTime) {
 //			Debug.Log (GameController.control.database.name);
 			try {
-				var reader = CsvReader.Read (database);
+				var reader = CsvReader.Read (Database);
 		
 			
 				var list = reader.FindAll(match => {
@@ -84,7 +84,7 @@ namespace Procrastinate
 						return false;
 					}
 				});
-			return list;
+				return list;
 			} catch  (Exception e) {
 				throw e;
 			}
@@ -92,17 +92,23 @@ namespace Procrastinate
 		}
 
 
-		public Wychd GetActivityList(float forTime) {
+		public static Wychd GetActivityList(float forTime) {
 			Wychd list = new Wychd ();
+			List<List<string>> activities;
 			try {
-				foreach (Wychd thing in GetActivities(forTime)) {
-					list.Add (thing[csv_text]);
+				activities = GetActivities(forTime);
+				foreach (List<string> thing in activities) {
+					try {
+						list.Add (thing [csv_text]);
+					} catch (Exception e) {
+						if (Bugger.WillLog (Testing.Exceptions, thing + " :: " + e.ToString ()))
+							Debug.Log (Bugger.Last);
+					}
 				}
-			} catch (Exception e) {
-				if (Bugger.WillLog(Testing.Exceptions, e.ToString()))
-					Debug.Log(Bugger.Last);
-			}
-			return list;
+				return list;
+			}catch (Exception e) {
+				throw e;
+			} 
 		}
 
 	}

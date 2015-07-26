@@ -3,12 +3,31 @@ using System.Collections;
 using RMX;  
 
 namespace Procrastinate {
+
+	public enum UserData {
+		// Saved Game Data
+		gd_current_session, gd_current_procrastination, gd_total_time_Wasted,
+		// Saved & Top Scores
+		sc_longest_procrastination,
+		// Top Scores
+		sc_total_as_percent_of_dev, 
+		
+		// Achievements (time based)
+		ach_ameteur_crastinator, ach_time_waster, ach_apathetic, ach_semi_pro, ach_pro_crastinator, 
+		// Achievements (Event Based)
+		ach_making_time, ach_overtime, ach_big_time,
+		
+		// Other System and Game Data
+		current_version, gd_has_played_before
+	
+	}
+
 	public class Version  {
 	
 		public const float v0_3_6 = 3.06f;
 		public const float v0_3_5 = 3.05f;
 
-		public const string Key = "current_version";
+//		public const string Key = UserData.current_version.ToString ();
 
 		public static float latest {
 			get {
@@ -19,9 +38,9 @@ namespace Procrastinate {
 		private static bool _failedPatch = false;
 		private static float currentVersion {
 			get {
-				return PlayerPrefs.GetFloat (Version.Key);
+				return SavedData.Get<float> (UserData.current_version);
 			} set {
-				PlayerPrefs.SetFloat(Version.Key, value);
+				SavedData.Set(UserData.current_version, value);
 			}
 		}
 
@@ -37,18 +56,18 @@ namespace Procrastinate {
 
 		public static void Patch() {
 			if (needsPatch) {
-				var log = Bugger.StartNewLog(Testing.Patches);
+				var log = "";
 				try {
 					PatchX ();
 					currentVersion = latest;
 //					needsPatch = false;
-					log.message += "Update Successful";
+					log += "Update Successful";
 				} catch (UnityException e) {
 					_failedPatch = true;
-					log.message += "Update failed: " + e.Message;
+					log += "Update failed: " + e.Message;
 				}
-				if (log.isActive)
-					Debug.Log (log);
+				if (Bugger.WillLog(Testing.Patches,log))
+					Debug.Log (Bugger.Last);
 			} 
 //			else if (Bugger.WillTest (Testing.Patches)) {
 //				var log = Bugger.StartLog(Testing.Patches);
@@ -69,29 +88,34 @@ namespace Procrastinate {
 
 		private static void Patchv0_3_6() {
 //			needsPatch = false;
-			Set (UserData.CurrentSession);
-			Set (UserData.CurrentProcrastination);
-			Set (UserData.TotalTime);
-			Set (UserData.LongestProctrastination);
+
+//			foreach (UserData key in System.Enum.GetValues(typeof(UserData)))
+//			{
+//				Set (key);
+//			}
+			Set (UserData.gd_current_session);
+			Set (UserData.gd_current_procrastination);
+			Set (UserData.gd_total_time_Wasted);
+			Set (UserData.sc_longest_procrastination);
 			// Top Scores
-			Set (UserData.PercentageOfDevTime);
+			Set (UserData.sc_total_as_percent_of_dev);
 			// Achievements
-			Set (UserData.AmeteurCrastinator);
-			Set (UserData.TimeWaster);
-			Set (UserData.OverTime);
-			Set (UserData.SemiPro);
-			Set (UserData.Apathetic);
-			Set (UserData.Pro);
-			Set (UserData.NotFirstTime);
+			Set (UserData.ach_ameteur_crastinator);
+			Set (UserData.ach_time_waster);
+			Set (UserData.ach_overtime);
+			Set (UserData.ach_semi_pro);
+			Set (UserData.ach_apathetic);
+			Set (UserData.ach_pro_crastinator);
+			Set (UserData.gd_has_played_before);
 			currentVersion = v0_3_6;
 		}
 		
 		private static void Patchv0_3_5() {
 //			needsPatch = false;
-			Setf (UserData.CurrentSession);
-			Setf (UserData.CurrentProcrastination);
-			Setf (UserData.TotalTime);
-			Setf (UserData.LongestProctrastination);
+			Setf (UserData.gd_current_session);
+			Setf (UserData.gd_current_procrastination);
+			Setf (UserData.gd_total_time_Wasted);
+			Setf (UserData.sc_longest_procrastination);
 			currentVersion = v0_3_5;
 		}
 		
@@ -101,60 +125,60 @@ namespace Procrastinate {
 			float version = currentVersion;
 			if (version < v0_3_5) {
 				switch (data) {
-				case UserData.CurrentSession:
+				case UserData.gd_current_session:
 					return "last session";
-				case UserData.CurrentProcrastination:
+				case UserData.gd_current_procrastination:
 					return "last uninterupted";
-				case UserData.TotalTime:
+				case UserData.gd_total_time_Wasted:
 					return "Total Time Wasted";
-				case UserData.LongestProctrastination:
+				case UserData.sc_longest_procrastination:
 					return "longestProcrastination";
-				case UserData.AmeteurCrastinator:
+				case UserData.ach_ameteur_crastinator:
 					return "Ameteur Crastinator";
-				case UserData.TimeWaster:
+				case UserData.ach_time_waster:
 					return "Time Waster";
-				case UserData.SemiPro:
+				case UserData.ach_semi_pro:
 					return "Semi-Pro";
-				case UserData.Apathetic:
+				case UserData.ach_apathetic:
 					return "Apathetic";
-				case UserData.Pro:
+				case UserData.ach_pro_crastinator:
 					return "Pro-Crastinator";
 				}
 			} else if (version < v0_3_6) {//change to next patch
 				switch (data) {
 					// Saved Game Data
-				case UserData.CurrentSession:
+				case UserData.gd_current_session:
 					return "last_session";
-				case UserData.CurrentProcrastination:
+				case UserData.gd_current_procrastination:
 					return "last_uninterupted";
-				case UserData.TotalTime:
+				case UserData.gd_total_time_Wasted:
 					return "Total_Time_Wasted";
-				case UserData.LongestProctrastination:
+				case UserData.sc_longest_procrastination:
 					return "longest_Procrastination";
 					
 					// Top Scores
-				case UserData.PercentageOfDevTime:
+				case UserData.sc_total_as_percent_of_dev:
 					return "total_as_percent_of_dev";
 					
 					// Achievements
-				case UserData.AmeteurCrastinator:
+				case UserData.ach_ameteur_crastinator:
 					return "AmeteurCrastinator";
-				case UserData.TimeWaster:
+				case UserData.ach_time_waster:
 					return "Time_Waster";
-				case UserData.OverTime:
+				case UserData.ach_overtime:
 					return "overtime";
-				case UserData.SemiPro:
+				case UserData.ach_semi_pro:
 					return "Semi_Pro";
-				case UserData.Apathetic:
+				case UserData.ach_apathetic:
 					return "Apathetic";
-				case UserData.Pro:
+				case UserData.ach_pro_crastinator:
 					return "Pro_Crastinator";
 					
 					// Other System and Game Data
-				case UserData.NotFirstTime:
+				case UserData.gd_has_played_before:
 					return "Has_Played_Before";
-				case UserData.Version:
-					return Version.Key;
+				case UserData.current_version:
+					return UserData.current_version.ToString();
 				}
 			}
 			return null;
@@ -170,11 +194,11 @@ namespace Procrastinate {
 		}
 
 		private static void Set(UserData key, Type type) {
-			var record = Bugger.StartNewLog (Testing.Patches);
+			var record = "";
 			object value = null;// = PlayerPrefs.GetFloat
 			var oldKey = OldKey (key);
-			var newKey = SavedData.GetKey (key);
-			record.message += "Updating <color=orange>'" + oldKey + "'</color> to <color=green>'" + newKey + "'</color>: ";
+			var newKey = key.ToString ();
+			record += "Updating <color=orange>'" + oldKey + "'</color> to <color=green>'" + newKey + "'</color>: ";
 			if (PlayerPrefs.HasKey (oldKey)) {
 				switch (type) {
 				case Type.Float:
@@ -193,16 +217,16 @@ namespace Procrastinate {
 				PlayerPrefs.SetString (newKey, value.ToString ());
 				if (oldKey != newKey) {
 					PlayerPrefs.DeleteKey (oldKey);
-					record.message += "\n Deleting old key";
+					record += "\n Deleting old key";
 				} else {
-					record.message += "\n No need to delete old key";
+					record += "\n No need to delete old key";
 				}
-				record.message += "\n<color=green>SUCCESS</color>";
+				record += "\n<color=green>SUCCESS</color>";
 			} else {
-				record.message += "\n<color=blue>Not updating: </color> Old Key does not exist.";
+				record += "\n<color=blue>Not updating: </color> Old Key does not exist.";
 			}
-			if (record.isActive)
-				Debug.Log (record);
+			if (Bugger.WillLog(Testing.Patches,record))
+				Debug.Log (Bugger.Last);
 
 		}
 

@@ -1,8 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
-//using RMX;  
+using RMX;  
 namespace Procrastinate {
-	public abstract class ABonus<TComponent> : MonoBehaviour
+	public abstract class ABonus<TComponent,T> : MonoBehaviour
+	where T : System.IEquatable<T>
 	where TComponent : Object {
 
 //		public enum UserData {
@@ -15,11 +16,11 @@ namespace Procrastinate {
 		public float min = 30;
 		public float max = 45;
 		protected TComponent component;
-		public SavedData data {
-			get {
-				return SavedData.Get(key);
-			}
-		}
+//		public SavedData data {
+//			get {
+//				return SavedData.Get(key);
+//			}
+//		}
 		public float probability = 0.5f;
 		
 		// Use this for initialization
@@ -51,8 +52,18 @@ namespace Procrastinate {
 
 		// Update is called once per frame
 		void Update () {
-			if (!isBonusActive && data.Float > threshold) {
-				Activate ();
+			try {
+			if (typeof(T) == typeof(float))
+				if (!isBonusActive && SavedData.Get<float>(key) > threshold) {
+					Activate ();
+				}
+
+			if (typeof(T) == typeof(bool))
+				if (!isBonusActive && SavedData.Get<bool>(key)) {
+					Activate ();
+				}
+			} catch {
+				Debug.LogError(key.ToString() + ": " + SavedData.Get<string>(key));
 			}
 		}
 		

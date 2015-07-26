@@ -5,14 +5,14 @@ using System.Collections.Generic;
 using RMX;  namespace Procrastinate {
 
 
-	public class BodyBecomesActive : ABonus<Rigidbody2D> {
+	public class BodyBecomesActive : ABonus<Rigidbody2D,float> {
 
 
 
 	
 
 		protected override void OnApplicationFocus(bool focus) {
-			if (key == UserData.CurrentProcrastination) {
+			if (key.ToString() == UserData.gd_current_procrastination.ToString()) {
 				base.OnApplicationFocus(focus);
 			}
 		}

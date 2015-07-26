@@ -17,7 +17,7 @@ using RMX;  namespace Procrastinate {
 			label = GetComponentInChildren<Text> ();
 			if (label == null) {
 				label = gameObject.AddComponent<Text> ();
-				label.font = LookAndFeel.current.mainFont;
+				label.font = GameController.current.mainFont;
 				label.fontSize = 62;
 				label.fontStyle = fontStyle;
 				label.lineSpacing = 1;

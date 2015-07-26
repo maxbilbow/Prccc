@@ -2,9 +2,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.SocialPlatforms;
-using RMX;  namespace Procrastinate {
+using RMX;  
 
-	public class Timer : RMX.Singletons.ASingleton<Timer> {
+namespace Procrastinate.Depricated {
+
+	public static class Timer { // : RMX.Singletons.ASingleton<Timer> {
 
 
 
@@ -28,14 +30,7 @@ using RMX;  namespace Procrastinate {
 			return result;
 		}
 
-
-
-
-
-		public void Save() {
-
-		}
-
+	
 	 	
 
 

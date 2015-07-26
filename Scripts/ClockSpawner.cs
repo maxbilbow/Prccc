@@ -15,7 +15,7 @@ using RMX;  namespace Procrastinate {
 
 	 	SpawnMode spawnMode {
 			get {
-				return Settings.current.ClockSpawnMode;
+				return GameController.current.ClockSpawnMode;
 			}
 		}	
 
@@ -23,7 +23,7 @@ using RMX;  namespace Procrastinate {
 	 	bool ShouldKillClocks {
 			get {
 				int time = (int) Time.fixedTime;
-				return clocks.Count > (time < Settings.current.MaxNumberOfClocks ? time : Settings.current.MaxNumberOfClocks);
+				return clocks.Count > (time < GameController.current.MaxNumberOfClocks ? time : GameController.current.MaxNumberOfClocks);
 			}
 		}
 
@@ -36,13 +36,13 @@ using RMX;  namespace Procrastinate {
 
 				switch (spawnMode) {
 				case SpawnMode.Multiply:
-					if (GameCenter.HasPlayerAlreadyAchieved (UserData.TimeWaster))
+					if (GameCenter.HasPlayerAlreadyAchieved (UserData.ach_time_waster))
 						if (Input.touchCount > 1) {
 							if (Spawn ())// && !GameCenter.current.HasAchieved (UserData.MakingTime))
-								DidCauseEvent(Events.GC_AchievementGained, UserData.MakingTime);
+								DidCauseEvent(Events.GC_AchievementGained, UserData.ach_making_time);
 							if (ShouldKillClocks) {
-						if (clocks.Count > Settings.current.MaxNumberOfClocks)// && !GameCenter.current.HasAchieved (UserData.OverTime))
-									DidCauseEvent(Events.GC_AchievementGained, UserData.OverTime);
+						if (clocks.Count > GameController.current.MaxNumberOfClocks)// && !GameCenter.current.HasAchieved (UserData.OverTime))
+									DidCauseEvent(Events.GC_AchievementGained, UserData.ach_overtime);
 								var toDestroy = clocks [1];
 								//					clocks.RemoveAt(1);
 								Destroy (toDestroy.gameObject);
@@ -50,7 +50,7 @@ using RMX;  namespace Procrastinate {
 						}
 					break;
 				case SpawnMode.Inflate:
-					if (GameCenter.HasPlayerAlreadyAchieved (UserData.AmeteurCrastinator))
+					if (GameCenter.HasPlayerAlreadyAchieved (UserData.ach_ameteur_crastinator))
 						if (Input.touchCount == 2) {
 							forTouch = 1;
 							if (!inflatableClock) {
@@ -83,9 +83,8 @@ using RMX;  namespace Procrastinate {
 						return pos;
 					}
 				} catch (System.Exception e) {
-					var log = Bugger.StartNewLog(Testing.Exceptions,e.Message);
-					if (log.isActive)
-						Debug.Log(log);
+					if (Bugger.WillLog(Testing.Exceptions,e.Message))
+						Debug.Log(Bugger.Last);
 				} finally {
 					pos = ClockBehaviour.original.startingPoint;
 					pos.y += ClockBehaviour.original.collisionBody.radius * 2;
@@ -99,7 +98,7 @@ using RMX;  namespace Procrastinate {
 			if (firstLoad) {
 				firstLoad = false;
 				return false;
-			} else if (Settings.current.ChanceGiven(UserData.TimeWaster)) {
+			} else if (GameController.current.ChanceGiven(UserData.ach_time_waster)) {
 				WillBeginEvent(Events.SpawnMultipleClocks);
 				var count = Input.touchCount;
 				forTouch = Random.Range(1,count);
@@ -114,14 +113,12 @@ using RMX;  namespace Procrastinate {
 		
 		public override void OnEventDidEnd(IEvent theEvent, object info) {
 			if (theEvent.IsType(Events.ResumeSession))
-				if (Settings.current.ClockSpawnMode == SpawnMode.Inflate) {
-					Settings.current.ClockSpawnMode = SpawnMode.Multiply;
+			if (GameController.current.ClockSpawnMode == SpawnMode.Inflate) {
+				GameController.current.ClockSpawnMode = SpawnMode.Multiply;
 					Spawn();
 				} else
-					Settings.current.ClockSpawnMode = SpawnMode.Inflate;
+				GameController.current.ClockSpawnMode = SpawnMode.Inflate;
 				ClockBehaviour.CheckVisibleClocks();
-			if (Bugger.WillLog (Testing.EventCenter, theEvent.ToString() + " DidEnd!"))
-				Debug.Log (Bugger.Last);
 		}
 
 	}

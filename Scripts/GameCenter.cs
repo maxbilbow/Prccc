@@ -9,9 +9,9 @@ using System.Runtime.InteropServices;
 //using GooglePlayGames;
 #endif
 
+using RMX;  
 
-
-using RMX;  namespace Procrastinate {
+namespace Procrastinate {
 	public class GameCenter : RMX.Singletons.ASingleton<GameCenter> {
 
 
@@ -20,22 +20,42 @@ using RMX;  namespace Procrastinate {
 			Authenticate ();
 //			TimeBasedAchievementsShouldUpdate ();
 
-			Settings.current.willPauseOnLoad = SavedData.Get(UserData.CurrentSession).Float > 0;
-			if (Settings.current.willPauseOnLoad) {
-				PauseCanvas.current.Pause(true);
-			}
+
 		
 
 		
 			UpdateGameCenterAchievements ();
+			GameController.current.willPauseOnLoad = SavedData.Get<float>(UserData.gd_current_session) > 0;
+			if (GameController.current.willPauseOnLoad) {
+				GameController.current.PauseGame(true, null);
+			}
 
 		}
 
 
-		void UpdateGameCenterAchievements () { //TODO
-			foreach (KeyValuePair<UserData,string> id in UniqueID)
-				if (!CheckAchievementsWithGameCenter (id.Key) && SavedData.Get (id.Key).Bool) 
-					ReportProgress (id.Key);
+		void UpdateGameCenterAchievements () { 
+			var log = "";
+			foreach (KeyValuePair<UserData,string> id in UniqueID) {
+				if (id.Key.ToString ().StartsWith ("ach_")) {
+					var successInSD = SavedData.Get<bool> (id.Key);
+					try {
+						var successInGC = CheckAchievementsWithGameCenter (id.Key);
+						if (successInSD != successInGC) 
+							DidCauseEvent (Events.GC_AchievementGained, id.Key);
+						log += " => " + id.Key + " SD: " + successInSD + ", GC: " + successInGC + "\n";
+					
+					} catch {
+						log += " => " + id.Key + " Should be in GC: " + successInSD + "\n";
+					}
+				}
+				if (Bugger.WillLog (Tests.Misc, log))
+					Debug.Log (Bugger.Last);
+			}
+//			foreach (KeyValuePair<UserData,string> id in UniqueID) {
+//				if (!CheckAchievementsWithGameCenter (id.Key) && SavedData.Get<bool> (id.Key)) 
+//					ReportProgress (id.Key);
+//
+//			}
 		}
 
 		public override void OnEventDidStart(IEvent theEvent, object info) {
@@ -46,18 +66,19 @@ using RMX;  namespace Procrastinate {
 		public override void OnEventDidEnd(IEvent theEvent, object info) {
 			if (theEvent.IsType(Events.PauseSession)) {
 				UpdateGameCenterAchievements ();
-				ReportScore(SavedData.Get(UserData.CurrentProcrastination).Long, UserData.LongestProctrastination);
+				ReportScore(SavedData.Get<long>(UserData.gd_current_procrastination), UserData.sc_longest_procrastination);
 			} 
 		}
 
 		public override void OnEvent(IEvent theEvent, object info) {
-			if (theEvent.IsType(Events.GC_AchievementGained))
+			if (theEvent.IsType (Events.GC_AchievementGained))
 				if (info is UserData) {
-					var key = (UserData) info;
+					var key = (UserData)info;
+					SavedData.Set (key, true);
 					ReportProgress (key);
-					if (Bugger.WillLog (Testing.EventCenter, info.ToString ()))
+					if (Bugger.WillLog (Testing.EventCenter, "Achievement Gained: " + info.ToString ()))
 						Debug.Log (Bugger.Last);
-			}
+				}
 		}
 
 		void Authenticate() {
@@ -68,7 +89,7 @@ using RMX;  namespace Procrastinate {
 					if (success) {
 						DidFinishEvent (Events.GC_UserAuthentication, EventStatus.Success);
 						userInfo += "Authentication successful";
-						userInfo += "Username: " + Social.localUser.userName + 
+						userInfo += "\nUsername: " + Social.localUser.userName + 
 							"\nUser ID: " + Social.localUser.id + 
 							"\nIsUnderage: " + Social.localUser.underage;
 					} else {
@@ -79,32 +100,22 @@ using RMX;  namespace Procrastinate {
 
 
 			} else {
-				userInfo += "Authentication already completed\n";
+				userInfo += "Authentication already completed";
 			}
 			if (Bugger.WillLog(Testing.GameCenter, userInfo))
 				Debug.Log (Bugger.Last);
 		}
 
-//		public bool HasAchieved(UserData key) {
-//			try {
-//				return SavedData.Get (key).Bool;
-//			} catch (Exception e) {
-//				SavedData.Get (key).Bool = false;
-//				var log = Bugger.StartNewLog(Testing.Exceptions, "HasAchieved(" + key + ") threw an error!\n" + e.Message);
-//				if (log.isActive)
-//				    Debug.Log(log);
-//				return false;
-//			}
-//		}
+
 
 		public void ReportScore (long score, UserData data) {
 			if (UserAuthenticated && score > 0) {
 				string leaderboardID = UniqueID [data];
 				var log = ""; var feature = Testing.GameCenter;
-				log += "Reporting score " + score + " on leaderboard " + leaderboardID + "\n";
+				log += "Reporting score " + score + " on leaderboard " + leaderboardID;
 				try {
 					Social.ReportScore (score, leaderboardID, success => {
-						log += success ? "Reported score successfully" : "Failed to report score";	
+						log += success ? ": Reported score successfully" : ": Failed to report score";	
 					});
 				} catch (System.Exception e) {
 					log += e;
@@ -117,55 +128,71 @@ using RMX;  namespace Procrastinate {
 		}
 
 
-		private UserData[] timeBasedAchievements = {
-			UserData.AmeteurCrastinator, 
-			UserData.Apathetic, UserData.SemiPro, UserData.Pro 
-		};
+
 
 
 
 		// Update is called once per frame
 		float _checkTime = 0;
 		void Update () {
+
 			if (Time.fixedTime > _checkTime) {
-				foreach (UserData key in timeBasedAchievements)
-					HasMetTimeCriteria(key);
-				_checkTime = Time.fixedTime + Settings.current.updateScoresEvery;
+				var log = "";
+				foreach (UserData key in System.Enum.GetValues(typeof(UserData)))
+				{
+					try {
+						log += " => "+ key + ": " + SavedData.Get<bool> (key) + ", First Time: " +  HasMetTimeCriteria (key) + "\n";
+
+					} catch {
+//						log += " => "+ key + ": is NOT a time-based achievement\n";
+					}
+				}
+				if (Bugger.WillLog(Tests.Achievements, log))
+					Debug.Log(Bugger.Last);
+				_checkTime = Time.fixedTime + GameController.current.updateScoresEvery;
 			}
 		}
 
 
 		public static bool HasPlayerAlreadyAchieved(UserData key) {
-			return SavedData.Get(key).Bool;
+			return SavedData.Get<bool>(key);
 		}
 
 		const float MINUTES = 60f, HOURS = 60 * 60f;
+
+		/// <summary>
+		/// Determines if has met time criteria the specified key.
+		/// </summary>
+		/// <returns><c>true</c> iff the criteria is met for the first time otherwise, <c>false</c>.</returns>
+		/// <param name="key">Key.</param>
 		public static bool HasMetTimeCriteria(UserData key) {
-			var totalTime = SavedData.Get(UserData.TotalTime).Float;
+			var totalTime = SavedData.Get<float>(UserData.gd_total_time_Wasted);
+			if (SavedData.Get<bool> (key))
+				return false;
 			var result = false;
 			switch (key) {
-			case UserData.AmeteurCrastinator:
-				result = SavedData.Get(key).Bool || totalTime > 20;
+			case UserData.ach_ameteur_crastinator:
+				result = totalTime > 20;
 				break;
-			case UserData.TimeWaster:
-				result = SavedData.Get(key).Bool || totalTime > (10 * MINUTES);
+			case UserData.ach_time_waster:
+				result = totalTime > (10 * MINUTES);
 				break;
-			case UserData.SemiPro:
-				result = SavedData.Get(key).Bool || totalTime > (Settings.current.TotalDevTimeWasted / 4);
+			case UserData.ach_semi_pro:
+				result = totalTime > (GameController.current.TotalDevTimeWasted / 4);
 				break;
-			case UserData.Apathetic:
-				result = SavedData.Get(key).Bool || totalTime > (Settings.current.TotalDevTimeWasted / 2);
+			case UserData.ach_apathetic:
+				result = totalTime > (GameController.current.TotalDevTimeWasted / 2);
 				break;
-			case UserData.Pro:
-				result = SavedData.Get(key).Bool || totalTime > Settings.current.TotalDevTimeWasted ;//gameData.PercentageOfDevTimeWasted;	
+			case UserData.ach_pro_crastinator:
+				result = totalTime > GameController.current.TotalDevTimeWasted ;//gameData.PercentageOfDevTimeWasted;	
 				break;
 			default:
 				throw new Exception(key + " Has not ben accounded for in HasMetTimeCriteria(UserData key)");
 			}
 	
 			if (result) {// && result != SavedData.Get (key).Bool) { 
-				Notifications.EventDidOccur (Events.GC_AchievementGained, key);
-//				SavedData.Get(key).Bool = true;
+				NotificationCenter.EventDidOccur (Events.GC_AchievementGained, key);
+				SavedData.Set(key, true);
 				return true;
 			} else {
 				return false; 
@@ -175,54 +202,15 @@ using RMX;  namespace Procrastinate {
 
 
 
-		/*
-		public static bool HasPlayerAchieved(UserData key, bool result) {
-			var totalTime = SavedData.Get(UserData.TotalTime).Double;
-			switch (key) {
-			case UserData.AmeteurCrastinator:
-				result = SavedData.Get(key).Bool ? true : totalTime > 20;
-				break;
-			case UserData.TimeWaster:
-				result = SavedData.Get(key).Bool ? true : totalTime > (10 * 60);
-				break;
-			case UserData.SemiPro:
-				result = SavedData.Get(key).Bool ? true : totalTime > (Settings.current.TotalDevTimeWasted / 4);
-				break;
-			case UserData.Apathetic:
-				result = SavedData.Get(key).Bool ? true : totalTime > (Settings.current.TotalDevTimeWasted / 2);
-				break;
-			case UserData.Pro:
-				result = SavedData.Get(key).Bool ? true : totalTime > Settings.current.TotalDevTimeWasted ;//gameData.PercentageOfDevTimeWasted;	
-				break;
-			case UserData.MakingTime:
-			case UserData.BigTime:
-			case UserData.OverTime:
-				break;
-			}
-			if (result && !SavedData.Get (key).Bool) { 
-				SavedData.Get (key).Bool = true;
-				Notifications.EventDidOccur (Event.GC_AchievementGained, key);
-				try {
-					current.ReportProgress(key, true);
-				} catch (Exception e){
-					Debug.LogWarning(e.Message);
-				}
-				return true;
-			} else {
-				return result; 
-			}
-
-		}
-		*/
 		static bool UserAuthenticated {
 			get {
-				return Notifications.StatusOf(Events.GC_UserAuthentication) == EventStatus.Success;
+				return NotificationCenter.StatusOf(Events.GC_UserAuthentication) == EventStatus.Success;
 			}
 		}
-		const double EVENT_BASED_ACHIEVEMENT = -1;
+
 		public void ReportProgress(UserData data) {
-			var achieved = SavedData.Get (data).Bool;
-			var log = Bugger.StartNewLog (Testing.Achievements, "Reporting Progress: " + achieved + "\n");
+			var achieved = SavedData.Get<bool> (data);
+			var log = data.ToString() + " => Reporting Progress: " + achieved; var feature = Testing.Achievements;
 
 			float progress = achieved ? 100 : 0;
 
@@ -235,72 +223,59 @@ using RMX;  namespace Procrastinate {
 				#if UNITY_IOS || UNITY_STANDALONE_OSX
 				try {
 					GKAchievementReporter.ReportAchievement(UniqueID[data], progress, true);
-					log.message += "\n => SUCCESS";
+					log += " => SUCCESS";
 				} catch (Exception e){
-					if (log.isActive) 
-						Debug.Log(log);
-					log.feature = Testing.Exceptions;
-					log.message += e.Message;
-					if (log.isActive) 
-						Debug.Log(log);
-					log.feature = Testing.Achievements;
+					if (Bugger.WillLog(Testing.Exceptions,e.Message) || Bugger.WillLog(Testing.Achievements,e.Message) )
+						Debug.Log(Bugger.Last);
 				}
 				#else
 				try {
 					Social.ReportProgress (UniqueID[data], progress, result => {
-						log.message += ", result: " + result;
+						log += ", result: " + result;
 						if (result) {
-							log.message += "\n => SUCCESS";
+							log += "\n => SUCCESS";
 						} else {
-							log.message += "\n => Achievement Failed to report";
+							log += "\n => Achievement Failed to report";
 						}
 					});
 				} catch (Exception e){
-					if (log.isActive) 
-						Debug.Log(log);
-					log.feature = Testing.Exceptions;
-					log.message += e.Message;
-					if (log.isActive) 
-						Debug.Log(log);
-					log.feature = Testing.Achievements;
+					if (Bugger.WillLog(Testing.Exceptions,e.Message) || Bugger.WillLog(Testing.Achievements,e.Message) )
+						Debug.Log(Bugger.Last);
 				}
 				#endif
-				log.message += "\n New status isCompleted: " + progress;
+				log += " - New status isCompleted: " + progress;
 				
 			}
-			if (log.isActive)
-				Debug.Log(log);
+			if (Bugger.WillLog(feature,log) )
+				Debug.Log(Bugger.Last);
 
 		}
 
 		bool CheckAchievementsWithGameCenter(UserData key) {
 			var achievementID = UniqueID [key];
 			var isComplete = false;
-			var log = Bugger.StartNewLog(Testing.Achievements);
+			var log = "";
 			if (UserAuthenticated) { //TODO: Check this works
 				try {
 					Social.LoadAchievements (achievements => {
 						if (achievements.Length > 0) {
-							log.message += "Got " + achievements.Length + " achievement instances:\n";
+							log += "Got " + achievements.Length + " achievement instances: ";
 							foreach (IAchievement achievement in achievements) {
 								if ( achievement.id == achievementID) {
 									isComplete = achievement.completed || achievement.percentCompleted == 100;
-									log.message += "Achievement " + achievement.id + ", progresss: " + achievement.percentCompleted + ", complete: " + achievement.completed + "\n";
+									log += "\nAchievement " + achievement.id + ", progresss: " + achievement.percentCompleted + ", complete: " + achievement.completed;
 									break;
 								}
 							}
 						} else {
-							if (log.isActive) 
-								Debug.Log (log);
+							if (Bugger.WillLog(Testing.Achievements,log) )
+								Debug.Log(Bugger.Last);
 							throw new System.ArgumentException ("No achievements returned");
 						}
 					});
-				} catch (System.ArgumentException exception) {
-					log.message += exception.Message;
-					log.feature = Testing.Exceptions;
-					if (log.isActive)
-						Debug.Log (log);
-					log.feature = Testing.Achievements;
+				} catch (System.ArgumentException e) {
+					if (Bugger.WillLog(Testing.Exceptions,e.Message) || Bugger.WillLog(Testing.Achievements,e.Message) )
+						Debug.Log(Bugger.Last);
 				}
 			}
 			return isComplete;
@@ -322,21 +297,21 @@ using RMX;  namespace Procrastinate {
 		#endif
 
 		public static Dictionary<UserData,string> UniqueID = new Dictionary<UserData,string> () {
-			{ UserData.LongestProctrastination, _grp + "CgkI2PKS_coeEAIQAw" },//"55415446";
-			{ UserData.PercentageOfDevTime, _grp + "CgkI2PKS_coeEAIQCA" },
-			{ UserData.AmeteurCrastinator, _grp + "CgkI2PKS_coeEAIQAQ" },
-			{ UserData.TimeWaster, _grp + "CgkI2PKS_coeEAIQBA" },
-			{ UserData.Apathetic, _grp + "CgkI2PKS_coeEAIQBw" },
-			{ UserData.SemiPro, _grp + "CgkI2PKS_coeEAIQBQ" },
-			{ UserData.Pro, _grp + "CgkI2PKS_coeEAIQBg" },
-			{ UserData.MakingTime, _grp + "CgkI2PKS_coeEAIQCQ" },
-			{ UserData.BigTime, _grp + "CgkI2PKS_coeEAIQDA" },
-			{ UserData.OverTime, _grp + "CgkI2PKS_coeEAIQDQ" }
+			{ UserData.sc_longest_procrastination, _grp + "CgkI2PKS_coeEAIQAw" },//"55415446";
+			{ UserData.sc_total_as_percent_of_dev, _grp + "CgkI2PKS_coeEAIQCA" },
+			{ UserData.ach_ameteur_crastinator, _grp + "CgkI2PKS_coeEAIQAQ" },
+			{ UserData.ach_time_waster, _grp + "CgkI2PKS_coeEAIQBA" },
+			{ UserData.ach_apathetic, _grp + "CgkI2PKS_coeEAIQBw" },
+			{ UserData.ach_semi_pro, _grp + "CgkI2PKS_coeEAIQBQ" },
+			{ UserData.ach_pro_crastinator, _grp + "CgkI2PKS_coeEAIQBg" },
+			{ UserData.ach_making_time, _grp + "CgkI2PKS_coeEAIQCQ" },
+			{ UserData.ach_big_time, _grp + "CgkI2PKS_coeEAIQDA" },
+			{ UserData.ach_overtime, _grp + "CgkI2PKS_coeEAIQDQ" }
 		};
 
 
 		void OnApplicationQuit() {
-			ReportScore(GameData.current.PercentageOfDevTimeWastedX10000, UserData.PercentageOfDevTime);
+			ReportScore(GameData.current.PercentageOfDevTimeWastedX10000, UserData.sc_total_as_percent_of_dev);
 
 		}
 

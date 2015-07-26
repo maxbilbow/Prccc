@@ -19,7 +19,7 @@ namespace Procrastinate
 
 		float fingerWidth { 
 			get {
-				return Settings.current.FingerSize;
+				return GameController.current.FingerSize;
 			}
 		}
 
@@ -131,10 +131,7 @@ namespace Procrastinate
 
 		public override string ToString ()
 		{
-			return  "\njoint anchor: " + m_SpringJoint.connectedAnchor +
-//			        "\nHit Position: " + hit.point +
-					"\nObj Position: " + m_SpringJoint.connectedBody.position +
-			        "\n  Hit Anchor: " + m_SpringJoint.anchor ;
+			return  "Success: " + this.name;
 		}
 
         private IEnumerator DragObject(float distance)
